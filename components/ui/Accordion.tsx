@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 interface AccordionItemData {
   number: string;
@@ -28,17 +28,14 @@ export function Accordion({ items, defaultOpen = 0, onItemChange }: AccordionPro
 
   return (
     <div className="space-y-3">
-      {items.map((item, i) => {
-        const isOpen = openIndex === i;
-        return (
-          <AccordionItem
-            key={i}
-            item={item}
-            isOpen={isOpen}
-            onClick={() => toggle(i)}
-          />
-        );
-      })}
+      {items.map((item, i) => (
+        <AccordionItem
+          key={i}
+          item={item}
+          isOpen={openIndex === i}
+          onClick={() => toggle(i)}
+        />
+      ))}
     </div>
   );
 }
@@ -53,9 +50,7 @@ function AccordionItem({
   onClick: () => void;
 }) {
   return (
-    <motion.div
-      layout
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className={`relative border overflow-hidden rounded-2xl transition-colors duration-300
         ${
           isOpen
@@ -63,7 +58,7 @@ function AccordionItem({
             : "border-[var(--color-border)] bg-[var(--color-card)] hover:border-[var(--color-fg)]"
         }`}
     >
-      {/* Decorative crop marks when open */}
+      {/* Crop marks */}
       {isOpen && (
         <>
           <span className="crop-mark-tl" aria-hidden />
@@ -73,16 +68,16 @@ function AccordionItem({
         </>
       )}
 
+      {/* Header */}
       <button
         type="button"
         onClick={onClick}
         aria-expanded={isOpen}
         className="w-full flex items-center justify-between gap-4 p-5 md:p-6 text-start group"
       >
-        {/* Left: number + title */}
         <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0">
           <span
-            className={`shrink-0 text-2xl md:text-3xl font-display font-bold tabular transition-colors duration-300
+            className={`shrink-0 text-2xl md:text-3xl font-bold tabular transition-colors duration-300
               ${isOpen ? "text-[var(--color-primary)]" : "text-[var(--color-muted)]"}`}
             style={{ fontFamily: "var(--font-display)" }}
           >
@@ -102,10 +97,10 @@ function AccordionItem({
           </div>
         </div>
 
-        {/* Right: chevron */}
+        {/* Chevron */}
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
           className={`shrink-0 grid place-items-center w-10 h-10 rounded-full transition-colors duration-300
             ${
               isOpen
@@ -124,32 +119,22 @@ function AccordionItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{
-              height: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
-              opacity: { duration: 0.25, delay: 0.1 },
-            }}
-            className="overflow-hidden"
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, .5] }}
+            style={{ overflow: "hidden" }}
           >
             <div className="px-5 md:px-6 pb-6 pt-0">
               <div className="ps-12 md:ps-16 border-t border-dashed border-[var(--color-border)] pt-5">
                 <ul className="space-y-3">
                   {item.lessons.map((lesson, idx) => (
-                    <motion.li
+                    <li
                       key={idx}
-                      initial={{ opacity: 0, x: 8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{
-                        duration: 0.3,
-                        delay: 0.15 + idx * 0.05,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
                       className="flex items-start gap-3 text-[var(--color-fg)]"
                     >
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-secondary)]" />
+                      <span className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-secondary)]" />
                       <span className="text-base md:text-lg leading-relaxed">
                         {lesson}
                       </span>
-                    </motion.li>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -157,6 +142,6 @@ function AccordionItem({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

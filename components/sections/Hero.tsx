@@ -126,14 +126,14 @@ export function Hero() {
             {/* Giant headline */}
             <h1
               id="hero-heading"
-              className="leading-[0.9] tracking-tight mb-10"
+              className="leading-[1.3] tracking-tight mb-10"
               style={{ fontFamily: "var(--font-display)" }}
             >
               <motion.span
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                className="block text-[clamp(2.8rem,5.5vw,5rem)] font-black text-[var(--color-fg)]"
+                className="block text-[clamp(2.8rem,5.5vw,2rem)] font-black text-[var(--color-fg)]"
               >
                 {heroContent.title.before}
               </motion.span>
@@ -142,7 +142,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                className="block text-[clamp(3rem,6vw,5.5rem)] font-black text-[var(--color-primary)] relative"
+                className="block text-[clamp(3rem,6vw,3.5rem)] font-black text-[var(--color-primary)] relative"
               >
                 {heroContent.title.highlight}
                 {/* Floating camera bubble */}
@@ -158,7 +158,7 @@ export function Hero() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="block text-[clamp(2rem,4.5vw,4rem)] font-black text-[var(--color-muted)]"
+                className="block text-[clamp(2rem,4.5vw,2rem)] font-black text-[var(--color-fg)]"
               >
                 {heroContent.title.after}
               </motion.span>
