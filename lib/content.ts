@@ -51,15 +51,15 @@ export const courseContent = {
   eyebrow: "محتوى الكورس",
   title: {
     before: "رحلة كاملة في",
-    highlight: "٦ أقسام",
+    highlight: "٤ أقسام",
     after: "متكاملة",
   },
   brief:
     "كل قسم مبني على اللي قبله. هتنتقل من الأساسيات لمستوى احترافي بطريقة منظمة وممتعة.",
   stats: [
-    { label: "ساعات", value: "15" },
-    { label: "أقسام", value: "6" },
-    { label: "محاضرات", value: "10" },
+    { label: "ساعات", value: "9" },
+    { label: "أقسام", value: "4" },
+    { label: "محاضرات", value: "25" },
   ],
   sections: [
     {
@@ -67,59 +67,52 @@ export const courseContent = {
       title: "أساسيات التصوير بالموبايل",
       duration: "ساعتين",
       lessons: [
-        "إعدادات الكاميرا الاحترافية في موبايلك",
-        "فهم الإضاءة الطبيعية والصناعية",
-        "قواعد التكوين الأساسية",
+        "تجهيز الموبايل قبل التصوير",
+        "أفضل إعدادات الكاميرا للتصوير الاحترافي",
+        "فهم جودة الفيديو والفريمات والرزليوشن",
+        "عدسة الموبايل وتحسين جودة الصورة",
+        "أهم الأخطاء اللي بتبوظ الفيديو",
       ],
     },
     {
       number: "02",
-      title: "فن التكوين والإطار",
-      duration: "٣ ساعات",
+      title: "التصوير الحركي والزوايا",
+      duration: "ساعتين",
       lessons: [
-        "قاعدة الأثلاث والخطوط الإرشادية",
-        "التماثل والتباين البصري",
-        "استخدام العمق والمنظور",
+        "التحرك بالموبايل بشكل ثابت واحترافي",
+        "أنواع الحركات السينمائية",
+        "تصوير الـ B-Roll بشكل احترافي",
+        "أفضل الزوايا لتصوير المنتجات والأشخاص",
+        "تصوير المشاهد الـ Slow Motion",
       ],
     },
     {
       number: "03",
       title: "إتقان الإضاءة",
-      duration: "٣ ساعات",
+      duration: "ساعتين",
       lessons: [
-        "الساعة الذهبية والساعة الزرقاء",
-        "التصوير في الإضاءة الصعبة",
-        "استخدام الإضاءة الاصطناعية",
+        "فهم الإضاءة الطبيعية والصناعية",
+        "التصوير في ضوء الشمس بشكل صحيح",
+        "توزيع الإضاءة داخل الاستوديو",
+        "التحكم في الظلال والهايلايت",
+        "أفضل أماكن واتجاهات الإضاءة",
       ],
     },
     {
       number: "04",
-      title: "التصوير حسب النوع",
+      title: "المونتاج وتحرير الفيديو",
       duration: "٣ ساعات",
       lessons: [
-        "تصوير البورتريه والأشخاص",
-        "تصوير الطعام والمنتجات",
-        "تصوير الشوارع والمعمار",
-      ],
-    },
-    {
-      number: "05",
-      title: "تحرير الصور (Editing)",
-      duration: "ساعتين",
-      lessons: [
-        "أساسيات Lightroom Mobile",
-        "إنشاء presets خاصة بك",
-        "تنسيق ألوان متّسق لحسابك",
-      ],
-    },
-    {
-      number: "06",
-      title: "بناء هويتك البصرية",
-      duration: "ساعتين",
-      lessons: [
-        "تطوير أسلوبك الخاص",
-        "بناء portfolio احترافي",
-        "تحويل الشغف لمصدر دخل",
+        "أساسيات المونتاج للمبتدئين",
+        "ترتيب اللقطات بشكل احترافي",
+        "إضافة الموسيقى والمؤثرات",
+        "تعديل الألوان (Color Correction)",
+        "الترانزيشن",
+        "عزل الخلفية",
+        "الكروما وازالتها",
+        "ازاى استخدم الكى فريم",
+        "ازاى اعمل ماسك",
+        "تصدير الفيديو بأعلى جودة للسوشيال ميدي",
       ],
     },
   ],
@@ -158,11 +151,6 @@ export const audienceContent = {
       title: "بتحب توثق ذكرياتك",
       description: "بشكل يستحق إنه يتحفظ ويتشاف",
     },
-    {
-      icon: "TrendingUp",
-      title: "عايز تتحول للاحتراف",
-      description: "وتبدأ شغل freelance في التصوير",
-    },
   ],
 };
 
@@ -178,12 +166,11 @@ export const testimonialsContent = {
   videosHeading: "أراء بعض الطلاب على إنستجرام",
   // Placeholder testimonial images (WhatsApp screenshots placeholders)
   images: [
-    { src: "/testimonials/t1.jpg", alt: "رسالة من طالب", aspect: "tall" },
-    { src: "/testimonials/t2.jpg", alt: "رسالة من طالب", aspect: "wide" },
-    { src: "/testimonials/t3.jpg", alt: "رسالة من طالب", aspect: "square" },
-    { src: "/testimonials/t4.jpg", alt: "رسالة من طالب", aspect: "tall" },
-    { src: "/testimonials/t5.jpg", alt: "رسالة من طالب", aspect: "wide" },
-    { src: "/testimonials/t6.jpg", alt: "رسالة من طالب", aspect: "square" },
+    { src: "/testimonials/1.jpeg", alt: "رسالة من طالب", aspect: "tall" },
+    { src: "/testimonials/2.jpeg", alt: "رسالة من طالب", aspect: "wide" },
+    { src: "/testimonials/3.jpeg", alt: "رسالة من طالب", aspect: "square" },
+    { src: "/testimonials/4.jpeg", alt: "رسالة من طالب", aspect: "tall" },
+    { src: "/testimonials/5.jpeg", alt: "رسالة من طالب", aspect: "wide" },
   ],
   // Placeholder Instagram embed URLs - replace with real ones
   videos: [
@@ -211,6 +198,6 @@ export const contactContent = {
 
 export const footerContent = {
   tagline: "كل صورة بتحكي حكاية. تعلّم تحكي حكايتك.",
-  copyright: "© ٢٠٢٥ حووووودة. جميع الحقوق محفوظة.",
+  copyright: "© ٢٠٢٥ Mahmoud Sherief. جميع الحقوق محفوظة.",
   navHeading: "روابط سريعة",
 };

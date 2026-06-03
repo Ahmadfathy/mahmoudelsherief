@@ -36,6 +36,6 @@ export const config = {
   heroPoster: "/videos/hero-poster.jpg",
 
   // Brand
-  brandName: "حووووودة",
+  brandName: "Mahmoud Sherief",
   brandTagline: "كورس التصوير بالموبايل",
 } as const;

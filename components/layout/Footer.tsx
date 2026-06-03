@@ -1,4 +1,3 @@
-"use client";
 
 import { Camera, Facebook, Instagram } from "lucide-react";
 import { footerContent, navItems } from "@/lib/content";

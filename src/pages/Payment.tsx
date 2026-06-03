@@ -1,9 +1,7 @@
-"use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Copy, Check, Camera } from "lucide-react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { config } from "@/lib/config";
 
 function CopyButton({ text, label }: { text: string; label: string }) {
@@ -36,8 +34,6 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
 
   if (!error) {
     return (
-      // Replace /payment/vodafone-qr.png and /payment/instapay-qr.png
-      // with your real QR code images in the /public/payment/ folder
       <img
         src={src}
         alt={alt}
@@ -47,11 +43,9 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
     );
   }
 
-  // Fallback placeholder when image is missing
   return (
     <div className="w-52 h-52 rounded-xl border-2 border-dashed border-[var(--color-border)] grid place-items-center bg-[var(--color-subtle)]">
       <div className="text-center p-4">
-        {/* QR frame corners */}
         <svg width="80" height="80" viewBox="0 0 80 80" className="mx-auto mb-3 opacity-30" aria-hidden>
           <rect x="2" y="2" width="22" height="22" rx="3" fill="none" stroke="currentColor" strokeWidth="4"/>
           <rect x="8" y="8" width="10" height="10" rx="1" fill="currentColor"/>
@@ -75,21 +69,20 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-export default function PaymentPage() {
+export default function Payment() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" dir="rtl">
 
-      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-[var(--color-bg)]/85 border-b border-[var(--color-border)]">
         <div className="max-w-4xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
           <Link
-            href="/"
+            to="/"
             className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-fg)] transition-colors"
           >
             <ArrowRight size={16} strokeWidth={2} />
             <span>الرجوع</span>
           </Link>
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>
+          <Link to="/" className="flex items-center gap-2 font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>
             <span className="grid place-items-center w-8 h-8 rounded-full bg-[var(--color-primary)] text-white">
               <Camera size={16} strokeWidth={1.75} />
             </span>
@@ -98,9 +91,7 @@ export default function PaymentPage() {
         </div>
       </header>
 
-      {/* Main */}
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-16">
-        {/* Page title */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -115,52 +106,36 @@ export default function PaymentPage() {
             افتح التطبيق وامسح الـ QR Code، أو انسخ الرقم وابعت المبلغ يدوياً
           </p>
 
-          {/* Price reminder */}
           <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[#1A1A1A] px-5 py-2 rounded-full">
             <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>1,999</span>
             <span className="text-sm font-bold">ج.م</span>
           </div>
         </motion.div>
 
-        {/* Payment cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
 
-          {/* ── Vodafone Cash ── */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
             className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col items-center gap-6 text-center hover:border-[#E60000]/40 transition-colors"
           >
-            {/* Vodafone brand */}
             <div className="flex items-center gap-3">
-              <span
-                className="w-12 h-12 rounded-full grid place-items-center text-white text-xl font-black shadow-lg"
-                style={{ background: "#E60000" }}
-              >
-                V
-              </span>
+              <img src="/vodafone-icon.png" alt="Vodafone Cash" className="w-[50px] h-[50px] object-contain rounded-full" />
               <div className="text-start">
-                <p className="font-black text-lg text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>
-                  فودافون كاش
-                </p>
+                <p className="font-black text-lg text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>فودافون كاش</p>
                 <p className="text-xs text-[var(--color-muted)] tabular">Vodafone Cash</p>
               </div>
             </div>
 
-            {/* QR Code */}
-            <QrPlaceholder
-              src="/payment/vodafone-qr.png"
-              alt="QR Code فودافون كاش"
-            />
+            <QrPlaceholder src="/vodafone-cash.jpeg" alt="QR Code فودافون كاش" />
 
-            {/* Phone number */}
             <div className="w-full">
               <p className="text-xs text-[var(--color-muted)] mb-2 uppercase tracking-widest">رقم المحفظة</p>
               <p className="text-2xl font-black text-[var(--color-fg)] mb-3 tabular" style={{ fontFamily: "var(--font-display)" }}>
-                {config.phone}
+                01012205238
               </p>
-              <CopyButton text={config.phone} label="نسخ الرقم" />
+              <CopyButton text="01012205238" label="نسخ الرقم" />
             </div>
 
             <p className="text-xs text-[var(--color-muted)] leading-relaxed">
@@ -168,42 +143,28 @@ export default function PaymentPage() {
             </p>
           </motion.div>
 
-          {/* ── InstaPay ── */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col items-center gap-6 text-center hover:border-[#6C2BD9]/40 transition-colors"
           >
-            {/* InstaPay brand */}
             <div className="flex items-center gap-3">
-              <span
-                className="w-12 h-12 rounded-full grid place-items-center text-white text-xl font-black shadow-lg"
-                style={{ background: "linear-gradient(135deg, #6C2BD9 0%, #3B82F6 100%)" }}
-              >
-                i
-              </span>
+              <img src="/instapay-icon.png" alt="InstaPay" className="w-[50px] h-[50px] object-contain rounded-full" />
               <div className="text-start">
-                <p className="font-black text-lg text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>
-                  إنستاباي
-                </p>
+                <p className="font-black text-lg text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>إنستاباي</p>
                 <p className="text-xs text-[var(--color-muted)] tabular">InstaPay</p>
               </div>
             </div>
 
-            {/* QR Code */}
-            <QrPlaceholder
-              src="/payment/instapay-qr.png"
-              alt="QR Code إنستاباي"
-            />
+            <QrPlaceholder src="/instapay.jpeg" alt="QR Code إنستاباي" />
 
-            {/* Account */}
             <div className="w-full">
               <p className="text-xs text-[var(--color-muted)] mb-2 uppercase tracking-widest">رقم الحساب</p>
               <p className="text-2xl font-black text-[var(--color-fg)] mb-3 tabular" style={{ fontFamily: "var(--font-display)" }}>
-                {config.phone}
+                01113010090
               </p>
-              <CopyButton text={config.phone} label="نسخ الرقم" />
+              <CopyButton text="01113010090" label="نسخ الرقم" />
             </div>
 
             <p className="text-xs text-[var(--color-muted)] leading-relaxed">
@@ -212,7 +173,6 @@ export default function PaymentPage() {
           </motion.div>
         </div>
 
-        {/* After payment CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

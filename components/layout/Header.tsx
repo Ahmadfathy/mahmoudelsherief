@@ -1,4 +1,3 @@
-"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,6 +5,7 @@ import { Menu, X, Camera } from "lucide-react";
 import { navItems } from "@/lib/content";
 import { ThemeToggle } from "./ThemeToggle";
 import { config } from "@/lib/config";
+import { Link } from "react-router-dom";
 
 export function Header() {
   const [hidden, setHidden] = useState(false);
@@ -95,10 +95,13 @@ export function Header() {
             className="flex items-center gap-2 font-bold text-xl group"
             style={{ fontFamily: "var(--font-display)" }}
           >
-            <span className="grid place-items-center w-9 h-9 rounded-full bg-[var(--color-primary)] text-white transition-transform duration-300 group-hover:rotate-12">
-              <Camera size={18} strokeWidth={1.75} />
-            </span>
-            <span className="text-[var(--color-fg)]">{config.brandName}</span>
+            <img
+              src="/logo.jpg"
+              alt="Logo"
+              className="w-9 h-9 rounded-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+            <span className="text-[var(--color-fg)] hidden md:inline">{config.brandName}</span>
+            <span className="text-[var(--color-fg)] md:hidden">MS</span>
           </a>
 
           {/* Desktop nav */}
@@ -143,7 +146,13 @@ export function Header() {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/payment"
+              className="hidden md:inline-flex items-center justify-center bg-[var(--color-primary)] text-white text-sm font-bold px-5 py-2 rounded-full hover:scale-105 transition-transform"
+            >
+              اشترك الآن
+            </Link>
             <ThemeToggle />
             <button
               type="button"
@@ -181,7 +190,7 @@ export function Header() {
                   className="font-bold text-lg"
                   style={{ fontFamily: "var(--font-display)" }}
                 >
-                  {config.brandName}
+                  MS
                 </span>
                 <button
                   type="button"
@@ -225,11 +234,20 @@ export function Header() {
                 </ul>
               </nav>
 
-              <div className="p-5 border-t border-[var(--color-border)] flex items-center justify-between">
-                <span className="text-sm text-[var(--color-muted)]">
-                  المظهر
-                </span>
-                <ThemeToggle />
+              <div className="p-5 border-t border-[var(--color-border)] flex flex-col gap-5">
+                <Link
+                  to="/payment"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center w-full bg-[var(--color-primary)] text-white text-base font-bold py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  اشترك الآن
+                </Link>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[var(--color-muted)]">
+                    المظهر
+                  </span>
+                  <ThemeToggle />
+                </div>
               </div>
             </motion.div>
           </>

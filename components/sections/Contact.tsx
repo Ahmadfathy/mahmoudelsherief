@@ -1,4 +1,3 @@
-"use client";
 
 import { Phone, MessageCircle, Mail, Facebook, Instagram, ArrowLeft } from "lucide-react";
 import { contactContent } from "@/lib/content";

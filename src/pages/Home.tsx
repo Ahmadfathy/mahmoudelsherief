@@ -9,7 +9,7 @@ import { WhoNeedsThis } from "@/components/sections/WhoNeedsThis";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Contact } from "@/components/sections/Contact";
 
-export default function HomePage() {
+export default function Home() {
   return (
     <>
       <Header />

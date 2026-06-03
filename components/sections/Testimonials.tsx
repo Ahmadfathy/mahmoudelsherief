@@ -1,7 +1,4 @@
-"use client";
-
 import { useEffect } from "react";
-import Script from "next/script";
 import { MessageCircle, Check } from "lucide-react";
 import { testimonialsContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
@@ -14,80 +11,16 @@ declare global {
 }
 
 export function Testimonials() {
-  // Process Instagram embeds when available
   useEffect(() => {
-    if (typeof window !== "undefined" && window.instgrm) {
-      window.instgrm.Embeds.process();
-    }
+    const script = document.createElement("script");
+    script.src = "https://www.instagram.com/embed.js";
+    script.async = true;
+    script.onload = () => window.instgrm?.Embeds.process();
+    document.body.appendChild(script);
+    return () => { document.body.removeChild(script); };
   }, []);
 
-  const whatsappChats = [
-    {
-      name: "سارة محمود",
-      avatar: "س",
-      avatarColor: "#7c3aed",
-      time: "10:43 ص",
-      messages: [
-        { text: "والله يا أستاذ الكورس دا غيّر طريقة تصويري ١٨٠ درجة 🔥", fromMe: false },
-        { text: "شغلي على إنستجرام دلوقتي مختلف تماماً", fromMe: false },
-        { text: "الحمد لله 🙏 ده اللي بنشتغل عشانه", fromMe: true },
-      ],
-    },
-    {
-      name: "أحمد خالد",
-      avatar: "أ",
-      avatarColor: "#0ea5e9",
-      time: "2:15 م",
-      messages: [
-        { text: "أحسن استثمار عملته في تطوير نفسي بجد", fromMe: false },
-        { text: "رجعت اشتريت كاميرا بعد ما خلصت الكورس 😄", fromMe: false },
-        { text: "ماشاء الله تبارك الله 💪", fromMe: true },
-      ],
-    },
-    {
-      name: "نورا حسن",
-      avatar: "ن",
-      avatarColor: "#f59e0b",
-      time: "9:05 م",
-      messages: [
-        { text: "مدرّب صبور وشرح بسيط جداً ❤️", fromMe: false },
-        { text: "تعلمت الـ Lightroom من الصفر وبقيت بيديت وحدي", fromMe: false },
-        { text: "ربنا يوفقك يا نورا 🌟", fromMe: true },
-      ],
-    },
-    {
-      name: "محمد علي",
-      avatar: "م",
-      avatarColor: "#10b981",
-      time: "11:58 ص",
-      messages: [
-        { text: "بعد الكورس بدأت أبيع صوري وأشتغل freelance 🎉", fromMe: false },
-        { text: "تجربة قلبت حياتي فعلاً", fromMe: false },
-        { text: "ده أجمل كلام بسمعه 🙏", fromMe: true },
-      ],
-    },
-    {
-      name: "ياسمين رمزي",
-      avatar: "ي",
-      avatarColor: "#ec4899",
-      time: "4:30 م",
-      messages: [
-        { text: "الكورس practical جداً ومحتاره على نفسي 😂", fromMe: false },
-        { text: "Worth every penny بجد", fromMe: false },
-        { text: "يسعدنا يا ياسمين 💛", fromMe: true },
-      ],
-    },
-    {
-      name: "ليلى أحمد",
-      avatar: "ل",
-      avatarColor: "#ef4444",
-      time: "7:22 م",
-      messages: [
-        { text: "تعلمت حاجات في الـ Lightroom مكنتش متخيلة الموبايل يعملها!", fromMe: false },
-        { text: "الحمد لله كتير 🎨", fromMe: true },
-      ],
-    },
-  ];
+
 
   return (
     <section
@@ -95,17 +28,8 @@ export function Testimonials() {
       aria-labelledby="testimonials-heading"
       className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-subtle)]"
     >
-      <Script
-        src="https://www.instagram.com/embed.js"
-        strategy="lazyOnload"
-        onLoad={() => {
-          if (typeof window !== "undefined" && window.instgrm) {
-            window.instgrm.Embeds.process();
-          }
-        }}
-      />
 
-      <div className="relative max-w-7xl mx-auto px-5 md:px-8">
+<div className="relative max-w-7xl mx-auto px-5 md:px-8">
         {/* Section number */}
         <div
           aria-hidden
@@ -159,72 +83,17 @@ export function Testimonials() {
             </div>
           </Reveal>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {whatsappChats.map((chat, i) => (
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
+            {testimonialsContent.images.map((img, i) => (
               <Reveal key={i} delay={i * 0.06}>
-                <TiltCard className="h-full">
-                  {/* WhatsApp chat window */}
-                  <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-md h-full flex flex-col" dir="ltr">
-                    {/* Header bar */}
-                    <div className="flex items-center gap-3 px-4 py-3" style={{ background: "#075E54" }}>
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                        style={{ background: chat.avatarColor }}
-                      >
-                        {chat.avatar}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white text-sm font-semibold leading-tight truncate">{chat.name}</p>
-                        <p className="text-[#25D366] text-xs">online</p>
-                      </div>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white" opacity={0.7} aria-hidden>
-                        <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-                      </svg>
-                    </div>
-
-                    {/* Chat body */}
-                    <div className="flex-1 px-3 py-4 space-y-2 text-sm" style={{ background: "#ECE5DD" }}>
-                      {/* Date chip */}
-                      <div className="flex justify-center mb-3">
-                        <span className="bg-white/80 text-gray-500 text-[10px] px-3 py-0.5 rounded-full">اليوم</span>
-                      </div>
-
-                      {chat.messages.map((msg, j) => (
-                        <div key={j} className={`flex ${msg.fromMe ? "justify-end" : "justify-start"}`}>
-                          <div
-                            className="relative max-w-[80%] rounded-xl px-3 py-2 shadow-sm"
-                            style={{
-                              background: msg.fromMe ? "#DCF8C6" : "#FFFFFF",
-                              borderBottomRightRadius: msg.fromMe ? "2px" : undefined,
-                              borderBottomLeftRadius: !msg.fromMe ? "2px" : undefined,
-                            }}
-                          >
-                            <p className="text-gray-800 leading-snug" style={{ direction: "rtl" }}>{msg.text}</p>
-                            <div className={`flex items-center gap-1 mt-0.5 ${msg.fromMe ? "justify-end" : "justify-start"}`}>
-                              <span className="text-[10px] text-gray-400">{chat.time}</span>
-                              {msg.fromMe && (
-                                <span className="text-[#34B7F1]">
-                                  <Check size={12} strokeWidth={2.5} className="inline -mr-1" />
-                                  <Check size={12} strokeWidth={2.5} className="inline" />
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Input bar (decorative) */}
-                    <div className="flex items-center gap-2 px-3 py-2 bg-[#F0F0F0] border-t border-gray-200">
-                      <div className="flex-1 bg-white rounded-full px-4 py-1.5 text-xs text-gray-300">اكتب رسالة...</div>
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#25D366" }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden>
-                          <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </TiltCard>
+                <div className="relative rounded-2xl overflow-hidden shadow-md break-inside-avoid border border-[var(--color-border)]">
+                  <img
+                    src={img.src}
+                    alt={img.alt || "Testimonial"}
+                    className="w-full h-auto object-cover"
+                    loading="lazy"
+                  />
+                </div>
               </Reveal>
             ))}
           </div>

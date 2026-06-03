@@ -1,6 +1,5 @@
-"use client";
 
-import { Clock, BookOpen, Layers } from "lucide-react";
+
 import { courseContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
 import { Accordion } from "@/components/ui/Accordion";
@@ -62,43 +61,7 @@ export function CourseContent() {
           </Reveal>
         </div>
 
-        {/* Stats chips */}
-        <Reveal>
-          <div className="flex flex-wrap items-stretch gap-3 mb-12">
-            {[
-              {
-                icon: Clock,
-                value: courseContent.stats[0].value,
-                label: courseContent.stats[0].label,
-              },
-              {
-                icon: Layers,
-                value: courseContent.stats[1].value,
-                label: courseContent.stats[1].label,
-              },
-              {
-                icon: BookOpen,
-                value: courseContent.stats[2].value,
-                label: courseContent.stats[2].label,
-              },
-            ].map((s, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full ps-3 pe-5 py-2"
-              >
-                <span className="grid place-items-center w-8 h-8 rounded-full bg-[var(--color-primary)] text-white">
-                  <s.icon size={14} strokeWidth={2} />
-                </span>
-                <span className="text-2xl font-bold tabular text-[var(--color-primary)]" style={{ fontFamily: "var(--font-display)" }}>
-                  {s.value}
-                </span>
-                <span className="text-sm text-[var(--color-muted)] font-medium">
-                  {s.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Reveal>
+
 
         {/* Accordion */}
         <Reveal>
