@@ -1,7 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Camera } from "lucide-react";
+import { Menu, X, Camera, GraduationCap } from "lucide-react";
 import { navItems } from "@/lib/content";
 import { ThemeToggle } from "./ThemeToggle";
 import { config } from "@/lib/config";
@@ -148,6 +148,13 @@ export function Header() {
 
           <div className="flex items-center gap-3">
             <Link
+              to="/academy"
+              className="hidden md:inline-flex items-center gap-1.5 text-sm font-bold px-4 py-2 rounded-full border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
+            >
+              <GraduationCap size={16} strokeWidth={1.75} />
+              الأكاديمية
+            </Link>
+            <Link
               to="/payment"
               className="hidden md:inline-flex items-center justify-center bg-[var(--color-primary)] text-white text-sm font-bold px-5 py-2 rounded-full hover:scale-105 transition-transform"
             >
@@ -235,6 +242,14 @@ export function Header() {
               </nav>
 
               <div className="p-5 border-t border-[var(--color-border)] flex flex-col gap-5">
+                <Link
+                  to="/academy"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full border border-[var(--color-border)] text-[var(--color-fg)] text-base font-bold py-3.5 rounded-xl hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] active:scale-[0.98] transition-all"
+                >
+                  <GraduationCap size={18} strokeWidth={1.75} />
+                  الأكاديمية
+                </Link>
                 <Link
                   to="/payment"
                   onClick={() => setMobileOpen(false)}

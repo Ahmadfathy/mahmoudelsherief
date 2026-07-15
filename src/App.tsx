@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/lib/auth-context";
+import { AuthModalProvider } from "@/lib/auth-modal-context";
 import { CoursesProvider } from "@/lib/courses-store";
 import Home from "./pages/Home";
 import Payment from "./pages/Payment";
@@ -18,17 +19,19 @@ export default function App() {
       <AuthProvider>
         <CoursesProvider>
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/payment" element={<Payment />} />
-              <Route path="/academy" element={<Academy />} />
-              <Route path="/academy/subscribe" element={<Subscribe />} />
-              <Route path="/academy/:slug" element={<CourseDetail />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/subscribers" element={<AdminSubscribers />} />
-              <Route path="/admin/courses" element={<AdminCourses />} />
-              <Route path="/admin/courses/:courseId" element={<AdminCourseEdit />} />
-            </Routes>
+            <AuthModalProvider>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/payment" element={<Payment />} />
+                <Route path="/academy" element={<Academy />} />
+                <Route path="/academy/subscribe" element={<Subscribe />} />
+                <Route path="/academy/:slug" element={<CourseDetail />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+                <Route path="/admin/courses" element={<AdminCourses />} />
+                <Route path="/admin/courses/:courseId" element={<AdminCourseEdit />} />
+              </Routes>
+            </AuthModalProvider>
           </BrowserRouter>
         </CoursesProvider>
       </AuthProvider>

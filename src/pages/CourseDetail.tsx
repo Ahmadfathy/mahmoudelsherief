@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,6 +15,7 @@ import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import type { Lesson } from "@/lib/academy-data";
 import { useCourses } from "@/lib/courses-store";
 import { useAuth } from "@/lib/auth-context";
+import { useAuthModal } from "@/lib/auth-modal-context";
 import { useCourseProgress } from "@/lib/progress";
 
 function getEmbedUrl(url: string): string | null {
@@ -28,6 +29,7 @@ function getEmbedUrl(url: string): string | null {
 export default function CourseDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { user, hasAccess } = useAuth();
+  const { openLogin } = useAuthModal();
   const { courses } = useCourses();
   const course = courses.find((c) => c.slug === slug);
 
@@ -41,11 +43,18 @@ export default function CourseDetail() {
 
   const { isCompleted, markCompleted } = useCourseProgress(course?.id ?? "");
 
+  const courseLocked = course ? course.requiresSubscription && !hasAccess(course.slug) : false;
+
+  useEffect(() => {
+    if (courseLocked && !user) openLogin();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [course?.id, courseLocked, user]);
+
   if (!course) {
     return <Navigate to="/academy" replace />;
   }
 
-  const locked = course.requiresSubscription && !hasAccess(course.slug);
+  const locked = courseLocked;
   const activeLesson: Lesson | undefined =
     flatLessons.find((l) => l.id === activeLessonId) ?? flatLessons[0];
   const activeIndex = flatLessons.findIndex((l) => l.id === activeLesson?.id);
@@ -77,7 +86,7 @@ export default function CourseDetail() {
         </Link>
 
         {locked ? (
-          <PaywallCard courseTitle={course.title} isLoggedIn={!!user} />
+          <PaywallCard courseTitle={course.title} isLoggedIn={!!user} onLogin={openLogin} />
         ) : (
           <div className="flex flex-col-reverse lg:flex-row gap-6">
             {/* Main content */}
@@ -240,7 +249,15 @@ export default function CourseDetail() {
   );
 }
 
-function PaywallCard({ courseTitle, isLoggedIn }: { courseTitle: string; isLoggedIn: boolean }) {
+function PaywallCard({
+  courseTitle,
+  isLoggedIn,
+  onLogin,
+}: {
+  courseTitle: string;
+  isLoggedIn: boolean;
+  onLogin: () => void;
+}) {
   return (
     <div className="max-w-lg mx-auto text-center py-16 px-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
       <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[var(--color-subtle)] grid place-items-center">
@@ -252,14 +269,25 @@ function PaywallCard({ courseTitle, isLoggedIn }: { courseTitle: string; isLogge
       <p className="text-[var(--color-muted)] mb-6">
         {isLoggedIn
           ? "الكورس ده لسه معندكش صلاحية تدخله. لو دفعت الاشتراك، استنى موافقة الأدمن."
-          : "الكورس ده متاح للمشتركين بس. سجّل طلب اشتراك عشان يتفعّلك."}
+          : "الكورس ده متاح للمشتركين بس. سجّل دخولك أو اطلب اشتراك جديد."}
       </p>
-      <Link
-        to="/academy/subscribe"
-        className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
-      >
-        {isLoggedIn ? "طلب اشتراك تاني" : "سجّل طلب اشتراك"}
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        {!isLoggedIn && (
+          <button
+            type="button"
+            onClick={onLogin}
+            className="inline-flex items-center justify-center h-12 px-8 rounded-full border-2 border-[var(--color-fg)] text-[var(--color-fg)] font-bold hover:bg-[var(--color-fg)] hover:text-[var(--color-bg)] transition-colors"
+          >
+            تسجيل الدخول
+          </button>
+        )}
+        <Link
+          to="/academy/subscribe"
+          className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
+        >
+          {isLoggedIn ? "طلب اشتراك تاني" : "سجّل طلب اشتراك"}
+        </Link>
+      </div>
     </div>
   );
 }

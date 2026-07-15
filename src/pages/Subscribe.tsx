@@ -4,9 +4,11 @@ import { CheckCircle2 } from "lucide-react";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import { useCourses } from "@/lib/courses-store";
 import { registerSubscriber } from "@/lib/subscribers-store";
+import { useAuthModal } from "@/lib/auth-modal-context";
 
 export default function Subscribe() {
   const { courses } = useCourses();
+  const { openLogin } = useAuthModal();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -66,8 +68,18 @@ export default function Subscribe() {
             >
               طلب اشتراك في الأكاديمية
             </h1>
-            <p className="text-[var(--color-muted)] mb-6">
+            <p className="text-[var(--color-muted)] mb-1">
               سجّل بياناتك وهنفعّلك الكورس بعد ما نتأكد من الاشتراك
+            </p>
+            <p className="text-sm text-[var(--color-muted)] mb-6">
+              لديك حساب بالفعل؟{" "}
+              <button
+                type="button"
+                onClick={openLogin}
+                className="text-[var(--color-primary)] font-bold hover:underline"
+              >
+                سجّل دخول
+              </button>
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
