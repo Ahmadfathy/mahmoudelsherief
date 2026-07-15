@@ -47,11 +47,9 @@ type CoursesContextValue = {
 const CoursesContext = createContext<CoursesContextValue | null>(null);
 
 export function CoursesProvider({ children }: { children: ReactNode }) {
-  const [courses, setCourses] = useState<Course[]>(seedCourses);
+  const [courses, setCourses] = useState<Course[]>(() => readJson(STORAGE_KEY, seedCourses));
 
   useEffect(() => {
-    setCourses(readJson(STORAGE_KEY, seedCourses));
-
     function onStorage(e: StorageEvent) {
       if (e.key === STORAGE_KEY) setCourses(readJson(STORAGE_KEY, seedCourses));
     }

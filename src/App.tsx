@@ -8,6 +8,9 @@ import Academy from "./pages/Academy";
 import CourseDetail from "./pages/CourseDetail";
 import Subscribe from "./pages/Subscribe";
 import Admin from "./pages/Admin";
+import AdminSubscribers from "./pages/AdminSubscribers";
+import AdminCourses from "./pages/AdminCourses";
+import AdminCourseEdit from "./pages/AdminCourseEdit";
 
 export default function App() {
   return (
@@ -22,6 +25,9 @@ export default function App() {
               <Route path="/academy/subscribe" element={<Subscribe />} />
               <Route path="/academy/:slug" element={<CourseDetail />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+              <Route path="/admin/courses" element={<AdminCourses />} />
+              <Route path="/admin/courses/:courseId" element={<AdminCourseEdit />} />
             </Routes>
           </BrowserRouter>
         </CoursesProvider>

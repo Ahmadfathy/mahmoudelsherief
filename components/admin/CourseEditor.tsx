@@ -46,7 +46,7 @@ export function CourseEditor({ course }: { course: Course }) {
   }
 
   return (
-    <div className="mt-4 pt-4 border-t border-dashed border-[var(--color-border)] space-y-5">
+    <div className="space-y-5">
       {/* Course meta */}
       <div className="space-y-2">
         <input

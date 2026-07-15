@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { config } from "@/lib/config";
 
 // جلسة السوبر أدمن — sessionStorage (بتتمسح لما التاب يتقفل) وتحقق client-side
@@ -19,11 +19,7 @@ export function adminLogout() {
 }
 
 export function useAdminSession() {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    setIsAdmin(window.sessionStorage.getItem(SESSION_KEY) === "1");
-  }, []);
+  const [isAdmin, setIsAdmin] = useState(() => window.sessionStorage.getItem(SESSION_KEY) === "1");
 
   function login(email: string, password: string) {
     const ok = adminLogin(email, password);

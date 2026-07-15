@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Upload } from "lucide-react";
 import type { Lesson, LessonResourceLink, LessonResourceFile } from "@/lib/academy-data";
 
 function parseResourceLines(text: string): { label: string; url: string }[] {
@@ -38,6 +39,25 @@ export function LessonEditorForm({
   const [description, setDescription] = useState(initial?.description ?? "");
   const [linksText, setLinksText] = useState(formatResourceLines(initial?.links));
   const [filesText, setFilesText] = useState(formatResourceLines(initial?.files));
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    };
+  }, []);
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+    const objectUrl = URL.createObjectURL(file);
+    objectUrlRef.current = objectUrl;
+    setVideoUrl(objectUrl);
+    setUploadedFileName(file.name);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,7 +89,10 @@ export function LessonEditorForm({
         <input
           type="text"
           value={videoUrl}
-          onChange={(e) => setVideoUrl(e.target.value)}
+          onChange={(e) => {
+            setVideoUrl(e.target.value);
+            setUploadedFileName(null);
+          }}
           placeholder="رابط الفيديو (يوتيوب/فيميو/mp4)"
           className="flex-1 h-9 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-card)]"
         />
@@ -80,6 +103,26 @@ export function LessonEditorForm({
           placeholder="المدة (12:30)"
           className="w-28 h-9 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-card)]"
         />
+      </div>
+      <div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] text-xs font-bold hover:bg-[var(--color-border)] transition-colors"
+        >
+          <Upload size={13} />
+          {uploadedFileName ? `تغيير الملف (${uploadedFileName})` : "أو ارفع ملف فيديو من جهازك"}
+        </button>
+        <p className="text-xs text-[var(--color-muted)] mt-1">
+          معاينة محلية على جهازك بس — الملف مش بيتحفظ ولا يظهر لغيرك لحد ما يتحط تخزين حقيقي.
+        </p>
       </div>
       <textarea
         value={description}

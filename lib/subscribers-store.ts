@@ -18,10 +18,58 @@ export type Subscriber = {
   createdAt: string;
 };
 
-const STORAGE_KEY = "academy-subscribers-v1";
+const STORAGE_KEY = "academy-subscribers-v2";
+
+// بيانات وهمية (seed) بتتحمل أول مرة بس عشان الجدول ميبقاش فاضي — بتتحل محل
+// بيانات حقيقية أول ما مشتركين فعليين يسجلوا.
+const seedSubscribers: Subscriber[] = [
+  {
+    id: "seed-sub-1",
+    name: "سارة أحمد",
+    email: "sara@example.com",
+    phone: "01011112222",
+    password: "demo1234",
+    interestedCourseSlug: "photography-101",
+    status: "pending",
+    approvedCourseSlugs: [],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+  },
+  {
+    id: "seed-sub-2",
+    name: "مصطفى عادل",
+    email: "mostafa@example.com",
+    phone: "01022223333",
+    password: "demo1234",
+    interestedCourseSlug: "photography-101",
+    status: "approved",
+    approvedCourseSlugs: ["photography-101"],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+  },
+  {
+    id: "seed-sub-3",
+    name: "نورهان يوسف",
+    email: "nourhan@example.com",
+    password: "demo1234",
+    interestedCourseSlug: "photography-101",
+    status: "rejected",
+    approvedCourseSlugs: [],
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+  },
+  {
+    id: "seed-sub-4",
+    name: "عمر خالد",
+    email: "omar@example.com",
+    phone: "01055556666",
+    password: "demo1234",
+    interestedCourseSlug: "photography-101",
+    status: "pending",
+    approvedCourseSlugs: [],
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+];
 
 export function readSubscribers(): Subscriber[] {
-  return readJson<Subscriber[]>(STORAGE_KEY, []);
+  return readJson<Subscriber[]>(STORAGE_KEY, seedSubscribers);
 }
 
 function writeSubscribers(subscribers: Subscriber[]) {
@@ -59,7 +107,7 @@ export function registerSubscriber(input: {
 }
 
 export function useSubscribers() {
-  const { value: subscribers, update } = useLocalStore<Subscriber[]>(STORAGE_KEY, []);
+  const { value: subscribers, update } = useLocalStore<Subscriber[]>(STORAGE_KEY, seedSubscribers);
 
   function approveSubscriber(id: string, courseSlugs: string[]) {
     update((subs) =>

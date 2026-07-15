@@ -20,17 +20,16 @@ export function writeJson<T>(key: string, value: T) {
 }
 
 export function useLocalStore<T>(key: string, seed: T) {
-  const [value, setValue] = useState<T>(seed);
-
-  useEffect(() => {
+  const [value, setValue] = useState<T>(() => {
     const existing = window.localStorage.getItem(key);
     if (existing === null) {
       writeJson(key, seed);
-      setValue(seed);
-    } else {
-      setValue(readJson(key, seed));
+      return seed;
     }
+    return readJson(key, seed);
+  });
 
+  useEffect(() => {
     function sync() {
       setValue(readJson(key, seed));
     }

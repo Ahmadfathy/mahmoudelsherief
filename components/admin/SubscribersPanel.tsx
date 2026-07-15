@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { CheckCircle2, XCircle, Trash2 } from "lucide-react";
 import { useSubscribers, type Subscriber, type SubscriberStatus } from "@/lib/subscribers-store";
 import { useCourses } from "@/lib/courses-store";
@@ -25,7 +25,7 @@ export function SubscribersPanel() {
   const [filter, setFilter] = useState<SubscriberStatus | "all">("pending");
 
   function startEditing(sub: Subscriber) {
-    setEditingId(sub.id);
+    setEditingId(editingId === sub.id ? null : sub.id);
     setPickerSlugs(
       sub.approvedCourseSlugs.length > 0
         ? sub.approvedCourseSlugs
@@ -33,11 +33,6 @@ export function SubscribersPanel() {
         ? [sub.interestedCourseSlug]
         : []
     );
-  }
-
-  function confirmApprove(id: string) {
-    approveSubscriber(id, pickerSlugs);
-    setEditingId(null);
   }
 
   const filtered =
@@ -69,119 +64,138 @@ export function SubscribersPanel() {
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 ? (
         <p className="text-[var(--color-muted)] text-sm">مفيش طلبات هنا.</p>
-      )}
-
-      <div className="space-y-3">
-        {filtered.map((sub) => {
-          const interestedCourse = courses.find((c) => c.slug === sub.interestedCourseSlug);
-          return (
-            <div
-              key={sub.id}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold">{sub.name}</p>
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[sub.status]}`}
-                    >
-                      {STATUS_LABEL[sub.status]}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[var(--color-muted)]">{sub.email}</p>
-                  {sub.phone && <p className="text-sm text-[var(--color-muted)]">{sub.phone}</p>}
-                  {interestedCourse && (
-                    <p className="text-xs text-[var(--color-muted)] mt-1">
-                      طلب اشتراك في: {interestedCourse.title}
-                    </p>
-                  )}
-                  {sub.approvedCourseSlugs.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {sub.approvedCourseSlugs.map((slug) => {
-                        const c = courses.find((c) => c.slug === slug);
-                        return (
-                          <span
-                            key={slug}
-                            className="text-xs bg-[var(--color-subtle)] px-2 py-0.5 rounded-full"
+      ) : (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-[var(--color-border)] text-start">
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الاسم</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الإيميل</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الموبايل</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">طلب اشتراك في</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الحالة</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الكورسات المفعّلة</th>
+                <th className="text-start font-bold px-4 py-3 whitespace-nowrap">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((sub) => {
+                const interestedCourse = courses.find((c) => c.slug === sub.interestedCourseSlug);
+                const isEditing = editingId === sub.id;
+                return (
+                  <Fragment key={sub.id}>
+                    <tr className="border-b border-[var(--color-border)] last:border-b-0">
+                      <td className="px-4 py-3 font-bold whitespace-nowrap">{sub.name}</td>
+                      <td className="px-4 py-3 text-[var(--color-muted)] whitespace-nowrap">
+                        {sub.email}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-muted)] whitespace-nowrap">
+                        {sub.phone ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-muted)] whitespace-nowrap">
+                        {interestedCourse?.title ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_STYLE[sub.status]}`}
+                        >
+                          {STATUS_LABEL[sub.status]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {sub.approvedCourseSlugs.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {sub.approvedCourseSlugs.map((slug) => {
+                              const c = courses.find((c) => c.slug === slug);
+                              return (
+                                <span
+                                  key={slug}
+                                  className="text-xs bg-[var(--color-subtle)] px-2 py-0.5 rounded-full whitespace-nowrap"
+                                >
+                                  {c?.title ?? slug}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => startEditing(sub)}
+                            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-green-500/10 text-green-500 text-xs font-bold hover:bg-green-500/20 transition-colors"
                           >
-                            {c?.title ?? slug}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => startEditing(sub)}
-                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-green-500/10 text-green-500 text-sm font-bold hover:bg-green-500/20 transition-colors"
-                  >
-                    <CheckCircle2 size={15} />
-                    {sub.status === "approved" ? "تعديل الصلاحيات" : "تفعيل"}
-                  </button>
-                  {sub.status !== "rejected" && (
-                    <button
-                      type="button"
-                      onClick={() => rejectSubscriber(sub.id)}
-                      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500/20 transition-colors"
-                    >
-                      <XCircle size={15} />
-                      رفض
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => deleteSubscriber(sub.id)}
-                    aria-label="حذف الطلب"
-                    className="grid place-items-center w-9 h-9 rounded-full text-[var(--color-muted)] hover:bg-[var(--color-subtle)] hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-
-              {editingId === sub.id && (
-                <div className="mt-4 pt-4 border-t border-dashed border-[var(--color-border)]">
-                  <p className="text-sm font-bold mb-2">الكورسات المفعّلة لـ {sub.name}</p>
-                  <CoursePickerCheckboxes
-                    courses={courses}
-                    selectedSlugs={pickerSlugs}
-                    onChange={setPickerSlugs}
-                  />
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (sub.status === "approved") {
-                          setApprovedCourses(sub.id, pickerSlugs);
-                        } else {
-                          confirmApprove(sub.id);
-                        }
-                        setEditingId(null);
-                      }}
-                      className="h-9 px-4 rounded-full bg-[var(--color-primary)] text-white text-sm font-bold hover:opacity-90 transition-opacity"
-                    >
-                      حفظ
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(null)}
-                      className="h-9 px-4 rounded-full bg-[var(--color-subtle)] text-sm font-bold hover:bg-[var(--color-border)] transition-colors"
-                    >
-                      إلغاء
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                            <CheckCircle2 size={13} />
+                            {sub.status === "approved" ? "تعديل" : "تفعيل"}
+                          </button>
+                          {sub.status !== "rejected" && (
+                            <button
+                              type="button"
+                              onClick={() => rejectSubscriber(sub.id)}
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-red-500/10 text-red-500 text-xs font-bold hover:bg-red-500/20 transition-colors"
+                            >
+                              <XCircle size={13} />
+                              رفض
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => deleteSubscriber(sub.id)}
+                            aria-label="حذف الطلب"
+                            className="grid place-items-center w-8 h-8 rounded-full text-[var(--color-muted)] hover:bg-[var(--color-subtle)] hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isEditing && (
+                      <tr className="border-b border-[var(--color-border)] last:border-b-0">
+                        <td colSpan={7} className="px-4 py-4 bg-[var(--color-subtle)]/40">
+                          <p className="text-sm font-bold mb-2">الكورسات المفعّلة لـ {sub.name}</p>
+                          <CoursePickerCheckboxes
+                            courses={courses}
+                            selectedSlugs={pickerSlugs}
+                            onChange={setPickerSlugs}
+                          />
+                          <div className="flex gap-2 mt-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (sub.status === "approved") {
+                                  setApprovedCourses(sub.id, pickerSlugs);
+                                } else {
+                                  approveSubscriber(sub.id, pickerSlugs);
+                                }
+                                setEditingId(null);
+                              }}
+                              className="h-9 px-4 rounded-full bg-[var(--color-primary)] text-white text-sm font-bold hover:opacity-90 transition-opacity"
+                            >
+                              حفظ
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingId(null)}
+                              className="h-9 px-4 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] text-sm font-bold hover:bg-[var(--color-border)] transition-colors"
+                            >
+                              إلغاء
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
