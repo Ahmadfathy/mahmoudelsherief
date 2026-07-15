@@ -4,7 +4,16 @@
       "Bash(npx tsc *)",
       "WebFetch(domain:agntix-next.vercel.app)",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
-      "mcp__Claude_in_Chrome__navigate"
+      "mcp__Claude_in_Chrome__navigate",
+      "Bash(npm create *)",
+      "Bash(npx --yes create-vite@latest temp-init --template react-ts)",
+      "Bash(xcopy /E /Y temp-init\\\\* .)",
+      "Bash(rmdir /S /Q temp-init)",
+      "Bash(npm install *)",
+      "Bash(npx --yes shadcn@latest init -d)",
+      "Bash(npx vite *)",
+      "mcp__Claude_Preview__preview_start",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5173 -ErrorAction Stop | Select-Object OwningProcess | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force })"
     ]
   }
 }
