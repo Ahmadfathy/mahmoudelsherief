@@ -12,7 +12,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
-import { getCourseBySlug, type Lesson } from "@/lib/academy-data";
+import type { Lesson } from "@/lib/academy-data";
+import { useCourses } from "@/lib/courses-store";
 import { useAuth } from "@/lib/auth-context";
 import { useCourseProgress } from "@/lib/progress";
 
@@ -26,8 +27,9 @@ function getEmbedUrl(url: string): string | null {
 
 export default function CourseDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const { isSubscribed, user, toggleSubscription } = useAuth();
-  const course = slug ? getCourseBySlug(slug) : undefined;
+  const { user, hasAccess } = useAuth();
+  const { courses } = useCourses();
+  const course = courses.find((c) => c.slug === slug);
 
   const flatLessons = useMemo(
     () => course?.units.flatMap((u) => u.lessons) ?? [],
@@ -43,7 +45,7 @@ export default function CourseDetail() {
     return <Navigate to="/academy" replace />;
   }
 
-  const locked = course.requiresSubscription && !isSubscribed;
+  const locked = course.requiresSubscription && !hasAccess(course.slug);
   const activeLesson: Lesson | undefined =
     flatLessons.find((l) => l.id === activeLessonId) ?? flatLessons[0];
   const activeIndex = flatLessons.findIndex((l) => l.id === activeLesson?.id);
@@ -75,11 +77,7 @@ export default function CourseDetail() {
         </Link>
 
         {locked ? (
-          <PaywallCard
-            courseTitle={course.title}
-            isLoggedIn={!!user}
-            onDemoUnlock={toggleSubscription}
-          />
+          <PaywallCard courseTitle={course.title} isLoggedIn={!!user} />
         ) : (
           <div className="flex flex-col-reverse lg:flex-row gap-6">
             {/* Main content */}
@@ -242,15 +240,7 @@ export default function CourseDetail() {
   );
 }
 
-function PaywallCard({
-  courseTitle,
-  isLoggedIn,
-  onDemoUnlock,
-}: {
-  courseTitle: string;
-  isLoggedIn: boolean;
-  onDemoUnlock: () => void;
-}) {
+function PaywallCard({ courseTitle, isLoggedIn }: { courseTitle: string; isLoggedIn: boolean }) {
   return (
     <div className="max-w-lg mx-auto text-center py-16 px-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
       <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-[var(--color-subtle)] grid place-items-center">
@@ -260,22 +250,16 @@ function PaywallCard({
         {courseTitle}
       </h1>
       <p className="text-[var(--color-muted)] mb-6">
-        الكورس ده متاح للمشتركين بس. {isLoggedIn ? "اشترك عشان تفتح المحتوى." : "سجّل دخولك واشترك عشان تفتح المحتوى."}
+        {isLoggedIn
+          ? "الكورس ده لسه معندكش صلاحية تدخله. لو دفعت الاشتراك، استنى موافقة الأدمن."
+          : "الكورس ده متاح للمشتركين بس. سجّل طلب اشتراك عشان يتفعّلك."}
       </p>
       <Link
-        to="/payment"
+        to="/academy/subscribe"
         className="inline-flex items-center justify-center h-12 px-8 rounded-full bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
       >
-        اشترك دلوقتي
+        {isLoggedIn ? "طلب اشتراك تاني" : "سجّل طلب اشتراك"}
       </Link>
-
-      <button
-        type="button"
-        onClick={onDemoUnlock}
-        className="block mx-auto mt-6 text-xs text-[var(--color-muted)] hover:text-[var(--color-fg)] underline"
-      >
-        (تجريبي) تفعيل الاشتراك للمعاينة
-      </button>
     </div>
   );
 }

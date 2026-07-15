@@ -1,66 +1,80 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { readSubscribers } from "@/lib/subscribers-store";
 
-// نظام تسجيل دخول شكلي (mock) لحد ما يتحط backend حقيقي (Supabase/Firebase)
-// كل البيانات دي بتتخزن في localStorage بس، مفيش أي تحقق حقيقي من السيرفر
+// جلسة المشترك — localStorage (mock) لحد ما يتحط backend حقيقي بيتحقق من
+// كلمة السر على السيرفر.
 
 export type AuthUser = {
   name: string;
-  avatarUrl?: string;
+  email: string;
+  approvedCourseSlugs: string[];
 };
+
+export type LoginResult = "ok" | "not-found" | "wrong-password" | "pending" | "rejected";
 
 type AuthContextValue = {
   user: AuthUser | null;
-  isSubscribed: boolean;
-  login: (name: string) => void;
+  login: (email: string, password: string) => LoginResult;
   logout: () => void;
-  toggleSubscription: () => void;
+  hasAccess: (courseSlug: string) => boolean;
 };
 
 const STORAGE_KEY = "academy-auth";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-function readStoredAuth(): { user: AuthUser | null; isSubscribed: boolean } {
-  if (typeof window === "undefined") return { user: null, isSubscribed: false };
+function readStoredUser(): AuthUser | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { user: null, isSubscribed: false };
-    return JSON.parse(raw);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
   } catch {
-    return { user: null, isSubscribed: false };
+    return null;
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
-    const stored = readStoredAuth();
-    setUser(stored.user);
-    setIsSubscribed(stored.isSubscribed);
+    setUser(readStoredUser());
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, isSubscribed }));
-  }, [user, isSubscribed]);
+    if (user) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    } else {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [user]);
 
-  function login(name: string) {
-    setUser({ name });
-    setIsSubscribed(true);
+  function login(email: string, password: string): LoginResult {
+    const normalizedEmail = email.trim().toLowerCase();
+    const record = readSubscribers().find((s) => s.email === normalizedEmail);
+
+    if (!record) return "not-found";
+    if (record.password !== password) return "wrong-password";
+    if (record.status === "pending") return "pending";
+    if (record.status === "rejected") return "rejected";
+
+    setUser({
+      name: record.name,
+      email: record.email,
+      approvedCourseSlugs: record.approvedCourseSlugs,
+    });
+    return "ok";
   }
 
   function logout() {
     setUser(null);
-    setIsSubscribed(false);
   }
 
-  function toggleSubscription() {
-    setIsSubscribed((s) => !s);
+  function hasAccess(courseSlug: string) {
+    return !!user && user.approvedCourseSlugs.includes(courseSlug);
   }
 
   return (
-    <AuthContext.Provider value={{ user, isSubscribed, login, logout, toggleSubscription }}>
+    <AuthContext.Provider value={{ user, login, logout, hasAccess }}>
       {children}
     </AuthContext.Provider>
   );

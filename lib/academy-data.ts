@@ -45,7 +45,9 @@ export type Course = {
   units: Unit[];
 };
 
-export const courses: Course[] = [
+// بيانات أولية (seed) بتتحمل في المخزن (lib/courses-store.ts) أول مرة بس —
+// بعد كده الأدمن هو اللي بيتحكم في الكورسات من /admin.
+export const seedCourses: Course[] = [
   {
     id: "photography-101",
     slug: "photography-101",
@@ -141,7 +143,3 @@ export const courses: Course[] = [
     ],
   },
 ];
-
-export function getCourseBySlug(slug: string): Course | undefined {
-  return courses.find((c) => c.slug === slug);
-}

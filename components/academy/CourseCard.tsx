@@ -5,8 +5,8 @@ import type { Course } from "@/lib/academy-data";
 import { useAuth } from "@/lib/auth-context";
 
 export function CourseCard({ course, index = 0 }: { course: Course; index?: number }) {
-  const { isSubscribed } = useAuth();
-  const locked = course.requiresSubscription && !isSubscribed;
+  const { hasAccess } = useAuth();
+  const locked = course.requiresSubscription && !hasAccess(course.slug);
   const lessonCount = course.units.reduce((sum, u) => sum + u.lessons.length, 0);
 
   return (

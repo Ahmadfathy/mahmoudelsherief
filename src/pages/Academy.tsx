@@ -1,8 +1,10 @@
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import { CourseCard } from "@/components/academy/CourseCard";
-import { courses } from "@/lib/academy-data";
+import { useCourses } from "@/lib/courses-store";
 
 export default function Academy() {
+  const { courses } = useCourses();
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)]" dir="rtl">
       <AcademyHeader />
