@@ -1,41 +1,56 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { apiRequest, getStudentToken } from "@/lib/api";
 
-// تتبع الدروس المكتملة محلياً (localStorage) لحد ما يتحط backend حقيقي
+type ProgressRow = {
+  lesson_id: number;
+  completed_at?: string | null;
+  last_position_seconds?: number;
+};
 
-function storageKey(courseId: string) {
-  return `academy-progress-${courseId}`;
-}
-
-function readCompleted(courseId: string): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = window.localStorage.getItem(storageKey(courseId));
-    if (!raw) return new Set();
-    return new Set(JSON.parse(raw) as string[]);
-  } catch {
-    return new Set();
-  }
-}
-
-export function useCourseProgress(courseId: string) {
+export function useCourseProgress(courseId: string, enabled = true) {
   const [completed, setCompleted] = useState<Set<string>>(() => new Set());
 
-  useEffect(() => {
-    setCompleted(readCompleted(courseId));
-  }, [courseId]);
+  const refresh = useCallback(async () => {
+    const token = getStudentToken();
+    if (!courseId || !enabled || !token) {
+      setCompleted(new Set());
+      return;
+    }
+    try {
+      const response = await apiRequest<{ progress: ProgressRow[] }>(
+        `/courses/${courseId}/progress`,
+        { token }
+      );
+      setCompleted(
+        new Set(
+          response.progress
+            .filter((row) => Boolean(row.completed_at))
+            .map((row) => String(row.lesson_id))
+        )
+      );
+    } catch {
+      setCompleted(new Set());
+    }
+  }, [courseId, enabled]);
 
-  function markCompleted(lessonId: string) {
-    setCompleted((prev) => {
-      const next = new Set(prev);
-      next.add(lessonId);
-      window.localStorage.setItem(storageKey(courseId), JSON.stringify([...next]));
-      return next;
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  async function markCompleted(lessonId: string) {
+    const token = getStudentToken();
+    if (!token) return;
+    await apiRequest(`/lessons/${lessonId}/progress`, {
+      method: "PUT",
+      token,
+      body: JSON.stringify({ completed: true }),
     });
+    setCompleted((previous) => new Set(previous).add(lessonId));
   }
 
   function isCompleted(lessonId: string) {
     return completed.has(lessonId);
   }
 
-  return { completed, markCompleted, isCompleted };
+  return { completed, markCompleted, isCompleted, refresh };
 }

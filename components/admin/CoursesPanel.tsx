@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronLeft, Plus, Trash2 } from "lucide-react";
 import { useCourses } from "@/lib/courses-store";
 
 export function CoursesPanel() {
-  const { courses, addCourse, deleteCourse } = useCourses();
+  const { courses, addCourse, deleteCourse, loadAdminCourses } = useCourses();
   const navigate = useNavigate();
   const [showAddForm, setShowAddForm] = useState(false);
 
@@ -14,24 +14,40 @@ export function CoursesPanel() {
   const [instructorTitle, setInstructorTitle] = useState("");
   const [instructorBio, setInstructorBio] = useState("");
   const [requiresSubscription, setRequiresSubscription] = useState(true);
+  const [price, setPrice] = useState("1999");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  function handleAddCourse(e: React.FormEvent) {
+  useEffect(() => {
+    loadAdminCourses().catch(() => setError("تعذر تحميل الكورسات.")).finally(() => setLoading(false));
+  }, []);
+
+  async function handleAddCourse(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
-    const course = addCourse({
-      title: title.trim(),
-      subtitle: subtitle.trim(),
-      requiresSubscription,
-      instructorName: instructorName.trim(),
-      instructorTitle: instructorTitle.trim(),
-      instructorBio: instructorBio.trim(),
-    });
+    setError("");
+    let course;
+    try {
+      course = await addCourse({
+        title: title.trim(),
+        subtitle: subtitle.trim(),
+        requiresSubscription,
+        instructorName: instructorName.trim(),
+        instructorTitle: instructorTitle.trim(),
+        instructorBio: instructorBio.trim(),
+        price: Number(price) || 0,
+      });
+    } catch {
+      setError("تعذر إضافة الكورس.");
+      return;
+    }
     setTitle("");
     setSubtitle("");
     setInstructorName("");
     setInstructorTitle("");
     setInstructorBio("");
     setRequiresSubscription(true);
+    setPrice("1999");
     setShowAddForm(false);
     navigate(`/admin/courses/${course.id}`);
   }
@@ -50,6 +66,9 @@ export function CoursesPanel() {
         </button>
       </div>
 
+      {loading && <p className="text-sm text-[var(--color-muted)] mb-4">جاري التحميل...</p>}
+      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+
       {showAddForm && (
         <form
           onSubmit={handleAddCourse}
@@ -61,6 +80,14 @@ export function CoursesPanel() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="عنوان الكورس"
             required
+            className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
+          />
+          <input
+            type="number"
+            min="0"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="سعر الكورس بالجنيه"
             className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
           />
           <input
@@ -124,8 +151,8 @@ export function CoursesPanel() {
               <div>
                 <p className="font-bold">{course.title}</p>
                 <p className="text-xs text-[var(--color-muted)]">
-                  {course.units.length} وحدة ·{" "}
-                  {course.units.reduce((n, u) => n + u.lessons.length, 0)} درس ·{" "}
+                  {course.units.length || course.unitsCount || 0} وحدة ·{" "}
+                  {course.units.length ? course.units.reduce((n, u) => n + u.lessons.length, 0) : course.lessonsCount || 0} درس ·{" "}
                   {course.requiresSubscription ? "يتطلب اشتراك" : "مجاني"}
                 </p>
               </div>
@@ -135,7 +162,7 @@ export function CoursesPanel() {
               type="button"
               onClick={() => {
                 if (confirm(`تحذف كورس "${course.title}" بالكامل؟`)) {
-                  deleteCourse(course.id);
+                  void deleteCourse(course.id).catch(() => setError("تعذر حذف الكورس."));
                 }
               }}
               aria-label="حذف الكورس"

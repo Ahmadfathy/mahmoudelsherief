@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { CheckCircle2 } from "lucide-react";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import { useCourses } from "@/lib/courses-store";
-import { registerSubscriber } from "@/lib/subscribers-store";
 import { useAuthModal } from "@/lib/auth-modal-context";
+import { useAuth } from "@/lib/auth-context";
+import { friendlyApiError } from "@/lib/api";
 
 export default function Subscribe() {
   const { courses } = useCourses();
   const { openLogin } = useAuthModal();
+  const { user, register, requestSubscription } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -16,24 +18,26 @@ export default function Subscribe() {
   const [courseSlug, setCourseSlug] = useState(courses[0]?.slug ?? "");
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-
-    const result = registerSubscriber({
-      name,
-      email,
-      phone,
-      password,
-      interestedCourseSlug: courseSlug || undefined,
-    });
-
-    if (!result.ok) {
-      setError("فيه حساب مسجل بالإيميل ده قبل كده.");
-      return;
+    setSubmitting(true);
+    try {
+      const course = courses.find((item) => item.slug === courseSlug);
+      if (!course) throw new Error("Course is required");
+      if (user) {
+        await requestSubscription(course.id);
+      } else {
+        await register({ name, email, phone, password, courseId: course.id });
+      }
+      setSubmitted(true);
+    } catch (requestError) {
+      setError(friendlyApiError(requestError));
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitted(true);
   }
 
   return (
@@ -57,7 +61,7 @@ export default function Subscribe() {
               تم استلام طلبك
             </h1>
             <p className="text-[var(--color-muted)]">
-              هنراجع طلبك ونفعّل الكورس بعد التأكد من الدفع، وهتقدر تدخل بنفس الإيميل وكلمة السر.
+              هنراجع طلبك ونفعّل الكورس بعد التأكد من الدفع، وهتقدر تدخل بنفس رقم الموبايل وكلمة السر.
             </p>
           </div>
         ) : (
@@ -71,18 +75,17 @@ export default function Subscribe() {
             <p className="text-[var(--color-muted)] mb-1">
               سجّل بياناتك وهنفعّلك الكورس بعد ما نتأكد من الاشتراك
             </p>
-            <p className="text-sm text-[var(--color-muted)] mb-6">
-              لديك حساب بالفعل؟{" "}
-              <button
-                type="button"
-                onClick={openLogin}
-                className="text-[var(--color-primary)] font-bold hover:underline"
-              >
-                سجّل دخول
-              </button>
-            </p>
+            {!user && (
+              <p className="text-sm text-[var(--color-muted)] mb-6">
+                لديك حساب بالفعل؟{" "}
+                <button type="button" onClick={openLogin} className="text-[var(--color-primary)] font-bold hover:underline">
+                  سجّل دخول
+                </button>
+              </p>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {!user && <>
               <div>
                 <label className="block text-sm font-bold mb-1.5">الاسم</label>
                 <input
@@ -106,11 +109,13 @@ export default function Subscribe() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1.5">رقم الموبايل (اختياري)</label>
+                <label className="block text-sm font-bold mb-1.5">رقم الموبايل</label>
                 <input
                   type="tel"
+                  inputMode="numeric"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  required
                   className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                 />
               </div>
@@ -122,13 +127,14 @@ export default function Subscribe() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
                 />
                 <p className="text-xs text-[var(--color-muted)] mt-1">
                   هتستخدمها عشان تدخل الكورس بعد ما يتفعّل
                 </p>
               </div>
+              </>}
 
               {courses.length > 0 && (
                 <div>
@@ -151,9 +157,10 @@ export default function Subscribe() {
 
               <button
                 type="submit"
+                disabled={submitting}
                 className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
               >
-                إرسال الطلب
+                {submitting ? "جاري إرسال الطلب..." : user ? "إرسال طلب الاشتراك" : "إنشاء الحساب وإرسال الطلب"}
               </button>
             </form>
           </>

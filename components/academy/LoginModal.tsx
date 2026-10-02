@@ -4,28 +4,31 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, type LoginResult } from "@/lib/auth-context";
 
 const LOGIN_ERROR_MESSAGES: Partial<Record<LoginResult, string>> = {
-  "not-found": "مفيش حساب بالإيميل ده. سجّل طلب اشتراك الأول.",
-  "wrong-password": "كلمة السر غلط.",
-  pending: "طلبك لسه قيد المراجعة من الأدمن.",
-  rejected: "طلبك اتراجع. تواصل معانا لمزيد من التفاصيل.",
+  invalid: "رقم الموبايل أو كلمة السر غير صحيحة.",
+  suspended: "الحساب موقوف. تواصل مع الإدارة.",
+  error: "تعذر الاتصال بالسيرفر. حاول مرة تانية.",
 };
 
 export function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   function close() {
     onClose();
-    setEmail("");
+    setPhone("");
     setPassword("");
     setError("");
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const result = login(email, password);
+    setSubmitting(true);
+    setError("");
+    const result = await login(phone, password);
+    setSubmitting(false);
     if (result === "ok") {
       close();
     } else {
@@ -55,14 +58,15 @@ export function LoginModal({ open, onClose }: { open: boolean; onClose: () => vo
               تسجيل الدخول للأكاديمية
             </h2>
             <p className="text-sm text-[var(--color-muted)] mb-4">
-              سجّل دخولك بالإيميل وكلمة السر اللي اتفعّلوا بعد موافقة الأدمن
+              سجّل دخولك برقم الموبايل وكلمة السر
             </p>
             <form onSubmit={handleSubmit} className="space-y-3">
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="الإيميل"
+                type="tel"
+                inputMode="numeric"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="رقم الموبايل"
                 autoFocus
                 required
                 className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
@@ -78,9 +82,10 @@ export function LoginModal({ open, onClose }: { open: boolean; onClose: () => vo
               {error && <p className="text-sm text-red-500">{error}</p>}
               <button
                 type="submit"
+                disabled={submitting}
                 className="w-full h-11 rounded-lg bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
               >
-                دخول
+                {submitting ? "جاري الدخول..." : "دخول"}
               </button>
             </form>
             <p className="text-sm text-[var(--color-muted)] mt-4 text-center">

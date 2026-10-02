@@ -1,36 +1,58 @@
-import { useState } from "react";
-import { config } from "@/lib/config";
+import { useEffect, useState } from "react";
+import { ApiError, apiRequest, getAdminToken, setAdminToken } from "@/lib/api";
 
-// جلسة السوبر أدمن — sessionStorage (بتتمسح لما التاب يتقفل) وتحقق client-side
-// بس، مؤقت لحد ما يتحط backend حقيقي بيتحقق من كلمة السر على السيرفر.
+type AdminUser = { id: number; name: string; email: string; role: string; status: string };
 
-const SESSION_KEY = "academy-admin-session";
-
-export function adminLogin(email: string, password: string): boolean {
-  const ok =
-    email.trim().toLowerCase() === config.admin.email.toLowerCase() &&
-    password === config.admin.password;
-  if (ok) window.sessionStorage.setItem(SESSION_KEY, "1");
-  return ok;
+export async function adminLogin(phone: string, password: string) {
+  const response = await apiRequest<{ user: AdminUser; token: string }>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ phone, password, device_name: "academy-admin" }),
+  });
+  if (response.user.role !== "admin") {
+    try {
+      await apiRequest("/auth/logout", { method: "POST", token: response.token });
+    } catch {
+      // The token is discarded below even if revocation is unavailable.
+    }
+    throw new ApiError("الحساب ده مش حساب أدمن.", 403);
+  }
+  setAdminToken(response.token);
+  return response.user;
 }
 
-export function adminLogout() {
-  window.sessionStorage.removeItem(SESSION_KEY);
+export async function adminLogout() {
+  const token = getAdminToken();
+  try {
+    if (token) await apiRequest("/auth/logout", { method: "POST", token });
+  } finally {
+    setAdminToken(null);
+  }
 }
 
 export function useAdminSession() {
-  const [isAdmin, setIsAdmin] = useState(() => window.sessionStorage.getItem(SESSION_KEY) === "1");
+  const [isAdmin, setIsAdmin] = useState(Boolean(getAdminToken()));
+  const [checking, setChecking] = useState(Boolean(getAdminToken()));
 
-  function login(email: string, password: string) {
-    const ok = adminLogin(email, password);
-    setIsAdmin(ok);
-    return ok;
-  }
+  useEffect(() => {
+    const sync = () => setIsAdmin(Boolean(getAdminToken()));
+    window.addEventListener("admin-auth-changed", sync);
+    return () => window.removeEventListener("admin-auth-changed", sync);
+  }, []);
 
-  function logout() {
-    adminLogout();
-    setIsAdmin(false);
-  }
+  useEffect(() => {
+    const token = getAdminToken();
+    if (!token) {
+      setChecking(false);
+      return;
+    }
+    apiRequest<{ user: AdminUser }>("/me", { token })
+      .then(({ user }) => {
+        if (user.role !== "admin") setAdminToken(null);
+        else setIsAdmin(true);
+      })
+      .catch(() => setAdminToken(null))
+      .finally(() => setChecking(false));
+  }, []);
 
-  return { isAdmin, login, logout };
+  return { isAdmin, checking, login: adminLogin, logout: adminLogout };
 }

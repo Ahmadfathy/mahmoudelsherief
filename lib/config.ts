@@ -10,7 +10,6 @@ export const config = {
   email: "info@example.com",
 
   // CTA destinations
-  paymentUrl: "#", // TODO: Replace with real payment page URL
   whatsappDetails:
     "https://wa.me/201012205238?text=" +
     encodeURIComponent("السلام عليكم، عايز أعرف تفاصيل أكتر عن كورس التصوير بالموبايل"),
@@ -39,10 +38,4 @@ export const config = {
   brandName: "Mahmoud Sherief",
   brandTagline: "كورس التصوير بالموبايل",
 
-  // Super-admin login for /admin — مؤقت لحد ما يتعمل backend حقيقي.
-  // ده بيتشك client-side بس (مش آمن للـ production)، غيّره قبل ما تنشر الموقع فعلياً.
-  admin: {
-    email: "admin@example.com",
-    password: "change-me-1234",
-  },
 } as const;

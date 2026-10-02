@@ -18,6 +18,8 @@ export function CourseEditor({ course }: { course: Course }) {
   const [title, setTitle] = useState(course.title);
   const [subtitle, setSubtitle] = useState(course.subtitle);
   const [requiresSubscription, setRequiresSubscription] = useState(course.requiresSubscription);
+  const [price, setPrice] = useState(String(course.price ?? 0));
+  const [isPublished, setIsPublished] = useState(course.isPublished ?? false);
   const [instructorName, setInstructorName] = useState(course.instructor.name);
   const [instructorTitle, setInstructorTitle] = useState(course.instructor.title);
   const [instructorBio, setInstructorBio] = useState(course.instructor.bio);
@@ -34,6 +36,8 @@ export function CourseEditor({ course }: { course: Course }) {
       title,
       subtitle,
       requiresSubscription,
+      price: Number(price) || 0,
+      isPublished,
       instructor: { name: instructorName, title: instructorTitle, bio: instructorBio },
     });
   }
@@ -55,6 +59,15 @@ export function CourseEditor({ course }: { course: Course }) {
           onChange={(e) => setTitle(e.target.value)}
           onBlur={saveMeta}
           placeholder="عنوان الكورس"
+          className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
+        />
+        <input
+          type="number"
+          min="0"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          onBlur={saveMeta}
+          placeholder="سعر الكورس بالجنيه"
           className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
         />
         <input
@@ -102,6 +115,18 @@ export function CourseEditor({ course }: { course: Course }) {
             className="w-4 h-4 accent-[var(--color-primary)]"
           />
           يتطلب اشتراك مفعّل
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={isPublished}
+            onChange={(e) => {
+              setIsPublished(e.target.checked);
+              void updateCourse(course.id, { isPublished: e.target.checked });
+            }}
+            className="w-4 h-4 accent-[var(--color-primary)]"
+          />
+          منشور للطلاب
         </label>
       </div>
 

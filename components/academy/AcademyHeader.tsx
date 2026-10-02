@@ -82,7 +82,7 @@ export function AcademyHeader() {
                 >
                   <div className="px-4 py-3 border-b border-[var(--color-border)]">
                     <p className="font-bold text-sm truncate">{user.name}</p>
-                    <p className="text-xs text-[var(--color-muted)] truncate">{user.email}</p>
+                    <p className="text-xs text-[var(--color-muted)] truncate" dir="ltr">{user.phone}</p>
                   </div>
                   <button
                     type="button"

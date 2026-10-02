@@ -2,22 +2,29 @@ import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { useAdminSession } from "@/lib/admin-auth";
+import { friendlyApiError } from "@/lib/api";
 
 export default function Admin() {
   const { isAdmin, login } = useAdminSession();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   if (isAdmin) return <Navigate to="/admin/subscribers" replace />;
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (login(email, password)) {
+    setSubmitting(true);
+    setError("");
+    try {
+      await login(phone, password);
       navigate("/admin/subscribers");
-    } else {
-      setError("بيانات الدخول غلط.");
+    } catch (requestError) {
+      setError(friendlyApiError(requestError, "بيانات الدخول غير صحيحة."));
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -38,10 +45,11 @@ export default function Admin() {
         </h1>
         <div className="space-y-3">
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="الإيميل"
+            type="tel"
+            inputMode="numeric"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="رقم الموبايل"
             autoFocus
             required
             className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
@@ -57,9 +65,10 @@ export default function Admin() {
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
+            disabled={submitting}
             className="w-full h-11 rounded-lg bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
           >
-            دخول
+            {submitting ? "جاري الدخول..." : "دخول"}
           </button>
         </div>
       </form>

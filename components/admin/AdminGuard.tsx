@@ -4,7 +4,9 @@ import { useAdminSession } from "@/lib/admin-auth";
 import { AdminHeader } from "./AdminHeader";
 
 export function AdminGuard({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAdminSession();
+  const { isAdmin, checking } = useAdminSession();
+
+  if (checking) return <div className="min-h-screen grid place-items-center">جاري التحقق...</div>;
 
   if (!isAdmin) return <Navigate to="/admin" replace />;
 

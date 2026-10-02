@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Copy, Check, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import { config } from "@/lib/config";
+import { useCourses } from "@/lib/courses-store";
+import { useAuth } from "@/lib/auth-context";
+import { useAuthModal } from "@/lib/auth-modal-context";
+import { apiRequest, friendlyApiError, getStudentToken } from "@/lib/api";
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -70,6 +74,55 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function Payment() {
+  const { courses } = useCourses();
+  const { user } = useAuth();
+  const { openLogin } = useAuthModal();
+  const [courseId, setCourseId] = useState("");
+  const [method, setMethod] = useState<"vodafone_cash" | "instapay">("vodafone_cash");
+  const [senderPhone, setSenderPhone] = useState("");
+  const [reference, setReference] = useState("");
+  const [receipt, setReceipt] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!courseId && courses[0]) setCourseId(courses[0].id);
+  }, [courses, courseId]);
+
+  const selectedCourse = courses.find((course) => course.id === courseId);
+
+  async function submitPayment(event: React.FormEvent) {
+    event.preventDefault();
+    if (!user) {
+      openLogin();
+      return;
+    }
+    const token = getStudentToken();
+    if (!token || !selectedCourse) return;
+    setSubmitting(true);
+    setError("");
+    setSuccess(false);
+    const form = new FormData();
+    form.append("course_id", selectedCourse.id);
+    form.append("method", method);
+    form.append("amount", String(selectedCourse.price || 1));
+    form.append("currency", selectedCourse.currency || "EGP");
+    if (senderPhone) form.append("sender_phone", senderPhone);
+    if (reference) form.append("transaction_reference", reference);
+    if (receipt) form.append("receipt", receipt);
+    try {
+      await apiRequest("/payments", { method: "POST", token, body: form });
+      setSuccess(true);
+      setReference("");
+      setReceipt(null);
+    } catch (requestError) {
+      setError(friendlyApiError(requestError));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" dir="rtl">
 
@@ -107,8 +160,10 @@ export default function Payment() {
           </p>
 
           <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[#1A1A1A] px-5 py-2 rounded-full">
-            <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>1,999</span>
-            <span className="text-sm font-bold">ج.م</span>
+            <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>
+              {(selectedCourse?.price ?? 0).toLocaleString("ar-EG")}
+            </span>
+            <span className="text-sm font-bold">{selectedCourse?.currency ?? "ج.م"}</span>
           </div>
         </motion.div>
 
@@ -118,7 +173,8 @@ export default function Payment() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col items-center gap-6 text-center hover:border-[#E60000]/40 transition-colors"
+            onClick={() => setMethod("vodafone_cash")}
+            className={`cursor-pointer bg-[var(--color-card)] border rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors ${method === "vodafone_cash" ? "border-[#E60000] ring-2 ring-[#E60000]/20" : "border-[var(--color-border)] hover:border-[#E60000]/40"}`}
           >
             <div className="flex items-center gap-3">
               <img src="/vodafone-icon.png" alt="Vodafone Cash" className="w-[50px] h-[50px] object-contain rounded-full" />
@@ -147,7 +203,8 @@ export default function Payment() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 flex flex-col items-center gap-6 text-center hover:border-[#6C2BD9]/40 transition-colors"
+            onClick={() => setMethod("instapay")}
+            className={`cursor-pointer bg-[var(--color-card)] border rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors ${method === "instapay" ? "border-[#6C2BD9] ring-2 ring-[#6C2BD9]/20" : "border-[var(--color-border)] hover:border-[#6C2BD9]/40"}`}
           >
             <div className="flex items-center gap-3">
               <img src="/instapay-icon.png" alt="InstaPay" className="w-[50px] h-[50px] object-contain rounded-full" />
@@ -173,26 +230,30 @@ export default function Payment() {
           </motion.div>
         </div>
 
-        <motion.div
+        <motion.form
+          onSubmit={submitPayment}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-10 text-center"
+          className="mt-10 w-full max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6"
         >
-          <p className="text-[var(--color-muted)] mb-4">بعد الدفع ابعتلنا إيصال الدفع على واتساب لتأكيد التسجيل</p>
-          <a
-            href={config.whatsappSubscribe}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold px-7 py-3.5 rounded-full hover:opacity-90 active:scale-95 transition-all duration-200"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            ابعت إيصال الدفع
-          </a>
-        </motion.div>
+          <h2 className="text-xl font-black mb-4">سجّل عملية الدفع</h2>
+          <div className="space-y-3 text-start">
+            <select value={courseId} onChange={(event) => setCourseId(event.target.value)} required className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]">
+              {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+            </select>
+            <input value={senderPhone} onChange={(event) => setSenderPhone(event.target.value)} placeholder="رقم الهاتف المحوّل منه" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
+            <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="رقم العملية (اختياري)" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
+            <label className="block text-sm font-bold">صورة إيصال الدفع</label>
+            <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} className="w-full text-sm" />
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            {success && <p className="text-sm text-green-500">تم إرسال الدفع للمراجعة بنجاح.</p>}
+            <button type="submit" disabled={submitting || !selectedCourse} className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold disabled:opacity-50">
+              {!user ? "سجّل الدخول لإرسال الإيصال" : submitting ? "جاري الإرسال..." : "إرسال الإيصال للمراجعة"}
+            </button>
+            <p className="text-xs text-center text-[var(--color-muted)]">لو واجهتك مشكلة، <a href={config.whatsappSubscribe} target="_blank" rel="noreferrer" className="text-[#25D366] font-bold">تواصل معنا على واتساب</a>.</p>
+          </div>
+        </motion.form>
       </main>
     </div>
   );

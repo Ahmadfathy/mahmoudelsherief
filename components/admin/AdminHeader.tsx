@@ -30,13 +30,15 @@ export function AdminHeader() {
             <NavLink to="/admin/courses" className={navLinkClass}>
               الكورسات
             </NavLink>
+            <NavLink to="/admin/payments" className={navLinkClass}>
+              المدفوعات
+            </NavLink>
           </nav>
         </div>
         <button
           type="button"
           onClick={() => {
-            adminLogout();
-            navigate("/admin", { replace: true });
+            void adminLogout().finally(() => navigate("/admin", { replace: true }));
           }}
           className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
         >

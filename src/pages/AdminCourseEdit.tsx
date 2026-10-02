@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
@@ -6,8 +7,17 @@ import { useCourses } from "@/lib/courses-store";
 
 export default function AdminCourseEdit() {
   const { courseId } = useParams<{ courseId: string }>();
-  const { courses } = useCourses();
+  const { courses, loadAdminCourse } = useCourses();
   const course = courses.find((c) => c.id === courseId);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!courseId) return;
+    loadAdminCourse(courseId)
+      .catch(() => setError("تعذر تحميل بيانات الكورس."))
+      .finally(() => setLoading(false));
+  }, [courseId]);
 
   return (
     <AdminGuard>
@@ -19,7 +29,9 @@ export default function AdminCourseEdit() {
         رجوع للكورسات
       </Link>
 
-      {course ? (
+      {loading ? (
+        <p className="text-[var(--color-muted)] text-sm">جاري التحميل...</p>
+      ) : course ? (
         <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5">
           <h1 className="text-xl font-bold mb-5" style={{ fontFamily: "var(--font-display)" }}>
             {course.title}
@@ -27,7 +39,7 @@ export default function AdminCourseEdit() {
           <CourseEditor course={course} />
         </div>
       ) : (
-        <p className="text-[var(--color-muted)] text-sm">الكورس مش موجود.</p>
+        <p className="text-red-500 text-sm">{error || "الكورس مش موجود."}</p>
       )}
     </AdminGuard>
   );

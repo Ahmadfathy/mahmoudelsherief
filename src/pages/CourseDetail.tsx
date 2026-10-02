@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -17,6 +17,7 @@ import { useCourses } from "@/lib/courses-store";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
 import { useCourseProgress } from "@/lib/progress";
+import { apiDownload, friendlyApiError, getStudentToken } from "@/lib/api";
 
 function getEmbedUrl(url: string): string | null {
   const yt = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([\w-]+)/);
@@ -30,8 +31,11 @@ export default function CourseDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { user, hasAccess } = useAuth();
   const { openLogin } = useAuthModal();
-  const { courses } = useCourses();
+  const { courses, loadCourse } = useCourses();
   const course = courses.find((c) => c.slug === slug);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [protectedVideoUrl, setProtectedVideoUrl] = useState("");
 
   const flatLessons = useMemo(
     () => course?.units.flatMap((u) => u.lessons) ?? [],
@@ -41,18 +45,53 @@ export default function CourseDetail() {
   const [openUnitId, setOpenUnitId] = useState(course?.units[0]?.id ?? "");
   const [activeLessonId, setActiveLessonId] = useState(flatLessons[0]?.id ?? "");
 
-  const { isCompleted, markCompleted } = useCourseProgress(course?.id ?? "");
-
   const courseLocked = course ? course.requiresSubscription && !hasAccess(course.slug) : false;
+  const { isCompleted, markCompleted } = useCourseProgress(
+    course?.id ?? "",
+    Boolean(user && !courseLocked)
+  );
+
+  useEffect(() => {
+    if (!slug) return;
+    setPageLoading(true);
+    setPageError("");
+    const canLoadProtected = Boolean(user && course && (!course.requiresSubscription || hasAccess(course.slug)));
+    loadCourse(slug, canLoadProtected)
+      .catch((requestError) => setPageError(friendlyApiError(requestError, "الكورس غير موجود.")))
+      .finally(() => setPageLoading(false));
+  }, [slug, user?.id, courseLocked]);
+
+  useEffect(() => {
+    if (!course?.units.length) return;
+    setOpenUnitId((current) => current || course.units[0].id);
+    setActiveLessonId((current) => current || course.units.flatMap((unit) => unit.lessons)[0]?.id || "");
+  }, [course?.id, course?.units]);
+
+  useEffect(() => {
+    let objectUrl = "";
+    setProtectedVideoUrl("");
+    const lesson = flatLessons.find((item) => item.id === activeLessonId) ?? flatLessons[0];
+    if (lesson?.videoType !== "upload" || courseLocked) return;
+    const token = getStudentToken();
+    if (!token) return;
+    apiDownload(`/lessons/${lesson.id}/video`, token)
+      .then((blob) => {
+        objectUrl = URL.createObjectURL(blob);
+        setProtectedVideoUrl(objectUrl);
+      })
+      .catch(() => setProtectedVideoUrl(""));
+    return () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [activeLessonId, flatLessons, courseLocked]);
 
   useEffect(() => {
     if (courseLocked && !user) openLogin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course?.id, courseLocked, user]);
 
-  if (!course) {
-    return <Navigate to="/academy" replace />;
-  }
+  if (pageLoading && !course) return <div className="min-h-screen grid place-items-center">جاري تحميل الكورس...</div>;
+  if (!course) return <div className="min-h-screen grid place-items-center text-red-500">{pageError || "الكورس غير موجود."}</div>;
 
   const locked = courseLocked;
   const activeLesson: Lesson | undefined =
@@ -64,13 +103,30 @@ export default function CourseDetail() {
     setActiveLessonId(lessonId);
   }
 
-  function goNext() {
+  async function goNext() {
     if (!activeLesson) return;
-    markCompleted(activeLesson.id);
+    await markCompleted(activeLesson.id);
     if (nextLesson) setActiveLessonId(nextLesson.id);
   }
 
   const embedUrl = activeLesson?.videoUrl ? getEmbedUrl(activeLesson.videoUrl) : null;
+  const directVideoUrl = activeLesson?.videoType === "upload" ? protectedVideoUrl : activeLesson?.videoUrl;
+
+  async function downloadResource(path: string, label: string) {
+    const token = getStudentToken();
+    if (!token) return openLogin();
+    try {
+      const blob = await apiDownload(path, token);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = label;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (requestError) {
+      setPageError(friendlyApiError(requestError, "تعذر تحميل الملف."));
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)]" dir="rtl">
@@ -84,6 +140,8 @@ export default function CourseDetail() {
           <ArrowLeft size={16} className="flip-rtl" />
           رجوع للأكاديمية
         </Link>
+
+        {pageError && <p className="mb-4 text-sm text-red-500">{pageError}</p>}
 
         {locked ? (
           <PaywallCard courseTitle={course.title} isLoggedIn={!!user} onLogin={openLogin} />
@@ -100,8 +158,8 @@ export default function CourseDetail() {
                     allowFullScreen
                     className="w-full h-full"
                   />
-                ) : activeLesson?.videoUrl ? (
-                  <video src={activeLesson.videoUrl} controls className="w-full h-full" />
+                ) : directVideoUrl ? (
+                  <video src={directVideoUrl} controls className="w-full h-full" />
                 ) : (
                   <div className="text-center text-white/60 p-8">
                     <PlayCircle size={40} className="mx-auto mb-3" strokeWidth={1.5} />
@@ -157,15 +215,15 @@ export default function CourseDetail() {
                         </a>
                       ))}
                       {activeLesson.files?.map((file) => (
-                        <a
+                        <button
+                          type="button"
                           key={file.url}
-                          href={file.url}
-                          download
+                          onClick={() => void downloadResource(file.url, file.label)}
                           className="flex items-center gap-2 text-[var(--color-primary)] hover:underline text-sm py-1"
                         >
                           <FileDown size={16} />
                           {file.label}
-                        </a>
+                        </button>
                       ))}
                     </div>
                   )}

@@ -12,6 +12,7 @@ import Admin from "./pages/Admin";
 import AdminSubscribers from "./pages/AdminSubscribers";
 import AdminCourses from "./pages/AdminCourses";
 import AdminCourseEdit from "./pages/AdminCourseEdit";
+import AdminPayments from "./pages/AdminPayments";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
                 <Route path="/admin/subscribers" element={<AdminSubscribers />} />
                 <Route path="/admin/courses" element={<AdminCourses />} />
                 <Route path="/admin/courses/:courseId" element={<AdminCourseEdit />} />
+                <Route path="/admin/payments" element={<AdminPayments />} />
               </Routes>
             </AuthModalProvider>
           </BrowserRouter>

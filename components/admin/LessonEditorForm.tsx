@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Upload } from "lucide-react";
 import type { Lesson, LessonResourceLink, LessonResourceFile } from "@/lib/academy-data";
 
@@ -31,6 +31,7 @@ export function LessonEditorForm({
     durationLabel?: string;
     links?: LessonResourceLink[];
     files?: LessonResourceFile[];
+    videoFile?: File;
   }) => void;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -40,22 +41,14 @@ export function LessonEditorForm({
   const [linksText, setLinksText] = useState(formatResourceLines(initial?.links));
   const [filesText, setFilesText] = useState(formatResourceLines(initial?.files));
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<File | undefined>();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const objectUrlRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    return () => {
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    };
-  }, []);
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-    const objectUrl = URL.createObjectURL(file);
-    objectUrlRef.current = objectUrl;
-    setVideoUrl(objectUrl);
+    setVideoFile(file);
+    setVideoUrl("");
     setUploadedFileName(file.name);
   }
 
@@ -69,6 +62,7 @@ export function LessonEditorForm({
       description: description.trim() || undefined,
       links: parseResourceLines(linksText),
       files: parseResourceLines(filesText),
+      videoFile,
     });
   }
 
@@ -92,6 +86,7 @@ export function LessonEditorForm({
           onChange={(e) => {
             setVideoUrl(e.target.value);
             setUploadedFileName(null);
+            setVideoFile(undefined);
           }}
           placeholder="رابط الفيديو (يوتيوب/فيميو/mp4)"
           className="flex-1 h-9 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-card)]"
@@ -121,7 +116,7 @@ export function LessonEditorForm({
           {uploadedFileName ? `تغيير الملف (${uploadedFileName})` : "أو ارفع ملف فيديو من جهازك"}
         </button>
         <p className="text-xs text-[var(--color-muted)] mt-1">
-          معاينة محلية على جهازك بس — الملف مش بيتحفظ ولا يظهر لغيرك لحد ما يتحط تخزين حقيقي.
+          الملف هيرتفع إلى التخزين الخاص في السيرفر ولن يعمل إلا للمشترك المصرح له.
         </p>
       </div>
       <textarea
