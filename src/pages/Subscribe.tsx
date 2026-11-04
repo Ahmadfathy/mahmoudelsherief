@@ -1,40 +1,66 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2 } from "lucide-react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
-import { useCourses } from "@/lib/courses-store";
-import { useAuthModal } from "@/lib/auth-modal-context";
+import { EgyptPhoneInput, isValidEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PasswordInput } from "@/components/academy/PasswordInput";
 import { useAuth } from "@/lib/auth-context";
-import { friendlyApiError } from "@/lib/api";
+import { AlertCircle } from "lucide-react";
+import { ApiError, friendlyApiError } from "@/lib/api";
+
+type RegisterField = "name" | "email" | "phone" | "password";
 
 export default function Subscribe() {
-  const { courses } = useCourses();
-  const { openLogin } = useAuthModal();
-  const { user, register, requestSubscription } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading, register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-  const [courseSlug, setCourseSlug] = useState(courses[0]?.slug ?? "");
   const [error, setError] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [errorField, setErrorField] = useState<RegisterField | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  if (!loading && user) return <Navigate to="/dashboard" replace />;
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setError("");
+    setErrorField(null);
+
+    const showValidationError = (field: RegisterField, message: string) => {
+      setErrorField(field);
+      setError(message);
+    };
+
+    if (!name.trim()) {
+      showValidationError("name", "من فضلك اكتب الاسم.");
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      showValidationError("email", "من فضلك اكتب بريدًا إلكترونيًا صحيحًا.");
+      return;
+    }
+    if (!isValidEgyptPhoneInput(phone)) {
+      showValidationError("phone", "رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+      return;
+    }
+    if (password.length < 8) {
+      showValidationError("password", "كلمة السر يجب ألا تقل عن 8 حروف أو أرقام.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const course = courses.find((item) => item.slug === courseSlug);
-      if (!course) throw new Error("Course is required");
-      if (user) {
-        await requestSubscription(course.id);
-      } else {
-        await register({ name, email, phone, password, courseId: course.id });
-      }
-      setSubmitted(true);
+      await register({ name, email, phone, password });
+      navigate("/dashboard", { replace: true });
     } catch (requestError) {
       setError(friendlyApiError(requestError));
+      if (requestError instanceof ApiError) {
+        const field = Object.keys(requestError.errors ?? {})[0];
+        if (["name", "email", "phone", "password"].includes(field)) {
+          setErrorField(field as RegisterField);
+        }
+      }
     } finally {
       setSubmitting(false);
     }
@@ -43,128 +69,26 @@ export default function Subscribe() {
   return (
     <div className="min-h-screen bg-[var(--color-bg)]" dir="rtl">
       <AcademyHeader />
-
-      <main className="max-w-lg mx-auto px-5 md:px-8 py-10 md:py-14">
-        <Link
-          to="/academy"
-          className="inline-block text-sm text-[var(--color-muted)] hover:text-[var(--color-fg)] transition-colors mb-6"
-        >
-          ← رجوع للأكاديمية
-        </Link>
-
-        {submitted ? (
-          <div className="text-center py-16 px-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
-            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-green-500/10 grid place-items-center">
-              <CheckCircle2 size={28} className="text-green-500" strokeWidth={1.75} />
+      <main className="mx-auto max-w-lg px-5 py-10 md:py-14">
+        <Link to="/subscribe" className="mb-6 inline-block text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">← رجوع</Link>
+        <h1 className="mb-1 text-3xl font-black" style={{ fontFamily: "var(--font-display)" }}>إنشاء حساب جديد</h1>
+        <p className="mb-7 text-[var(--color-muted)]">سجّل بياناتك، وبعدها اختار الكورس المناسب من لوحة حسابك.</p>
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <div><label className="mb-1.5 block text-sm font-bold">الاسم</label><input type="text" value={name} onChange={(event) => { setName(event.target.value); if (errorField === "name") { setError(""); setErrorField(null); } }} required autoComplete="name" aria-invalid={errorField === "name"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "name" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
+          <div><label className="mb-1.5 block text-sm font-bold">الإيميل</label><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); if (errorField === "email") { setError(""); setErrorField(null); } }} required autoComplete="email" aria-invalid={errorField === "email"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "email" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
+          <div><label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label><EgyptPhoneInput value={phone} onChange={(value) => { setPhone(value); if (errorField === "phone") { setError(""); setErrorField(null); } }} invalid={errorField === "phone"} /><p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p></div>
+          <div><label className="mb-1.5 block text-sm font-bold">كلمة السر</label><PasswordInput value={password} onChange={(value) => { setPassword(value); if (errorField === "password") { setError(""); setErrorField(null); } }} autoComplete="new-password" minLength={8} invalid={errorField === "password"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors ${errorField === "password" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)]"}`} /><p className="mt-1 text-xs text-[var(--color-muted)]">8 حروف أو أرقام على الأقل</p></div>
+          {error && (
+            <div role="alert" className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 shadow-sm">
+              <AlertCircle className="mt-0.5 shrink-0" size={19} />
+              <div>
+                <p className="text-sm font-bold">راجع البيانات التالية</p>
+                <p className="mt-0.5 text-sm leading-6">{error}</p>
+              </div>
             </div>
-            <h1 className="text-xl font-bold mb-2" style={{ fontFamily: "var(--font-display)" }}>
-              تم استلام طلبك
-            </h1>
-            <p className="text-[var(--color-muted)]">
-              هنراجع طلبك ونفعّل الكورس بعد التأكد من الدفع، وهتقدر تدخل بنفس رقم الموبايل وكلمة السر.
-            </p>
-          </div>
-        ) : (
-          <>
-            <h1
-              className="text-2xl font-bold mb-1"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              طلب اشتراك في الأكاديمية
-            </h1>
-            <p className="text-[var(--color-muted)] mb-1">
-              سجّل بياناتك وهنفعّلك الكورس بعد ما نتأكد من الاشتراك
-            </p>
-            {!user && (
-              <p className="text-sm text-[var(--color-muted)] mb-6">
-                لديك حساب بالفعل؟{" "}
-                <button type="button" onClick={openLogin} className="text-[var(--color-primary)] font-bold hover:underline">
-                  سجّل دخول
-                </button>
-              </p>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!user && <>
-              <div>
-                <label className="block text-sm font-bold mb-1.5">الاسم</label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-1.5">الإيميل</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-1.5">رقم الموبايل</label>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                  className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold mb-1.5">كلمة السر</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                />
-                <p className="text-xs text-[var(--color-muted)] mt-1">
-                  هتستخدمها عشان تدخل الكورس بعد ما يتفعّل
-                </p>
-              </div>
-              </>}
-
-              {courses.length > 0 && (
-                <div>
-                  <label className="block text-sm font-bold mb-1.5">الكورس اللي عايز تشترك فيه</label>
-                  <select
-                    value={courseSlug}
-                    onChange={(e) => setCourseSlug(e.target.value)}
-                    className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-                  >
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.slug}>
-                        {c.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {error && <p className="text-sm text-red-500">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold hover:opacity-90 transition-opacity"
-              >
-                {submitting ? "جاري إرسال الطلب..." : user ? "إرسال طلب الاشتراك" : "إنشاء الحساب وإرسال الطلب"}
-              </button>
-            </form>
-          </>
-        )}
+          )}
+          <button type="submit" disabled={submitting} className="h-12 w-full rounded-full bg-[var(--color-primary)] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50">{submitting ? "جاري إنشاء الحساب..." : "إنشاء الحساب"}</button>
+        </form>
       </main>
     </div>
   );

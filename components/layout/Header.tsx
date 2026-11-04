@@ -1,13 +1,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Camera, GraduationCap } from "lucide-react";
+import { Menu, X, Camera, GraduationCap, CircleUserRound } from "lucide-react";
 import { navItems } from "@/lib/content";
 import { ThemeToggle } from "./ThemeToggle";
 import { config } from "@/lib/config";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/lib/auth-context";
 
 export function Header() {
+  const { user } = useAuth();
   const [hidden, setHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeId, setActiveId] = useState<string>("hero");
@@ -154,12 +156,23 @@ export function Header() {
               <GraduationCap size={16} strokeWidth={1.75} />
               الأكاديمية
             </Link>
-            <Link
-              to="/payment"
-              className="hidden md:inline-flex items-center justify-center bg-[var(--color-primary)] text-white text-sm font-bold px-5 py-2 rounded-full hover:scale-105 transition-transform"
-            >
-              اشترك الآن
-            </Link>
+            {user ? (
+              <Link
+                to="/dashboard"
+                aria-label="الدخول إلى حسابي"
+                title="حسابي"
+                className="hidden md:grid h-10 w-10 place-items-center rounded-full bg-[var(--color-primary)] text-white transition-transform hover:scale-105"
+              >
+                <CircleUserRound size={22} strokeWidth={1.8} />
+              </Link>
+            ) : (
+              <Link
+                to="/subscribe"
+                className="hidden md:inline-flex items-center justify-center bg-[var(--color-primary)] text-white text-sm font-bold px-5 py-2 rounded-full hover:scale-105 transition-transform"
+              >
+                اشترك الآن
+              </Link>
+            )}
             <ThemeToggle />
             <button
               type="button"
@@ -251,11 +264,12 @@ export function Header() {
                   الأكاديمية
                 </Link>
                 <Link
-                  to="/payment"
+                  to={user ? "/dashboard" : "/subscribe"}
                   onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center w-full bg-[var(--color-primary)] text-white text-base font-bold py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all"
+                  className="flex items-center justify-center gap-2 w-full bg-[var(--color-primary)] text-white text-base font-bold py-3.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all"
                 >
-                  اشترك الآن
+                  {user && <CircleUserRound size={20} strokeWidth={1.8} />}
+                  {user ? "حسابي" : "اشترك الآن"}
                 </Link>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--color-muted)]">

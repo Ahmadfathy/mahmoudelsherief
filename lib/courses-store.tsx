@@ -39,6 +39,7 @@ function mapLesson(raw: JsonRecord): Lesson {
       id: String(resource.id),
       label: text(resource.label),
       url: `/lesson-resources/${resource.id}/download`,
+      filePath: text(resource.file_path) || undefined,
     }));
   const seconds = number(raw.duration_seconds);
 
@@ -48,6 +49,10 @@ function mapLesson(raw: JsonRecord): Lesson {
     description: text(raw.description) || undefined,
     videoType: (text(raw.video_type) || undefined) as Lesson["videoType"],
     videoUrl: text(raw.video_url) || undefined,
+    videoPath: text(raw.video_path) || undefined,
+    videoOriginalName: text(raw.video_original_name) || undefined,
+    thumbnailImage: text(raw.thumbnail_image) || undefined,
+    thumbnailImageUrl: text(raw.thumbnail_image_url) || undefined,
     durationSeconds: seconds || undefined,
     durationLabel: durationLabel(seconds),
     links,
@@ -113,7 +118,7 @@ type CoursesContextValue = {
   loadAdminCourses: () => Promise<void>;
   loadAdminCourse: (courseId: string) => Promise<Course>;
   addCourse: (input: CourseInput) => Promise<Course>;
-  updateCourse: (courseId: string, patch: Partial<Course>) => Promise<void>;
+  updateCourse: (courseId: string, patch: Partial<Course> & { coverImageFile?: File }) => Promise<Course>;
   deleteCourse: (courseId: string) => Promise<void>;
   addUnit: (courseId: string, title: string) => Promise<void>;
   updateUnit: (courseId: string, unitId: string, title: string) => Promise<void>;
@@ -150,6 +155,7 @@ function lessonFormData(lesson: Partial<Lesson>, creating = false) {
     form.append("video_url", lesson.videoUrl || "");
     form.append("video_type", videoType(lesson.videoUrl) ?? "url");
   }
+  if (lesson.thumbnailFile) form.append("thumbnail", lesson.thumbnailFile);
   const seconds = lesson.durationSeconds ?? parseDuration(lesson.durationLabel);
   if (seconds !== undefined) form.append("duration_seconds", String(seconds));
   if (lesson.isPreview !== undefined) form.append("is_preview", lesson.isPreview ? "1" : "0");
@@ -158,15 +164,19 @@ function lessonFormData(lesson: Partial<Lesson>, creating = false) {
 
   const resources = [
     ...(lesson.links ?? []).map((item) => ({ ...item, type: "link" })),
-    ...(lesson.files ?? []).map((item) => ({ ...item, type: "link" })),
+    ...(lesson.files ?? []).map((item) => ({ ...item, type: "file" })),
   ];
-  if (creating || lesson.links !== undefined || lesson.files !== undefined) {
+  if (creating || lesson.links !== undefined || lesson.files !== undefined || lesson.resourceFiles !== undefined) {
     resources.forEach((resource, index) => {
       form.append(`resources[${index}][type]`, resource.type);
       form.append(`resources[${index}][label]`, resource.label);
-      form.append(`resources[${index}][url]`, resource.url);
+      if (resource.type === "link") form.append(`resources[${index}][url]`, resource.url);
+      if (resource.type === "file" && "filePath" in resource && resource.filePath) {
+        form.append(`resources[${index}][file_path]`, resource.filePath);
+      }
       form.append(`resources[${index}][sort_order]`, String(index));
     });
+    (lesson.resourceFiles ?? []).forEach((file) => form.append("resource_files[]", file));
     if (resources.length === 0) form.append("clear_resources", "1");
   }
   return form;
@@ -246,7 +256,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     return course;
   }
 
-  async function updateCourse(courseId: string, patch: Partial<Course>) {
+  async function updateCourse(courseId: string, patch: Partial<Course> & { coverImageFile?: File }) {
     const payload: JsonRecord = {};
     if (patch.title !== undefined) payload.title = patch.title;
     if (patch.subtitle !== undefined) payload.subtitle = patch.subtitle;
@@ -261,15 +271,24 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
       payload.instructor_title = patch.instructor.title;
       payload.instructor_bio = patch.instructor.bio;
     }
+    const form = patch.coverImageFile ? new FormData() : null;
+    if (form) {
+      form.append("_method", "PATCH");
+      form.append("cover_image", patch.coverImageFile);
+      Object.entries(payload).forEach(([key, value]) => {
+        form.append(key, typeof value === "boolean" ? (value ? "1" : "0") : String(value ?? ""));
+      });
+    }
     const response = await apiRequest<{ course: JsonRecord }>(`/admin/courses/${courseId}`, {
-      method: "PATCH",
+      method: form ? "POST" : "PATCH",
       token: getAdminToken(),
-      body: JSON.stringify(payload),
+      body: form ?? JSON.stringify(payload),
     });
     const updated = mapCourse(response.course);
     setCourses((current) =>
       current.map((course) => (course.id === courseId ? { ...course, ...updated, units: course.units } : course))
     );
+    return updated;
   }
 
   async function deleteCourse(courseId: string) {

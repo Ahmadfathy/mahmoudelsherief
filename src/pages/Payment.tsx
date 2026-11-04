@@ -1,12 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Copy, Check, Camera } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Copy, Check, Camera, ImageUp } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { config } from "@/lib/config";
 import { useCourses } from "@/lib/courses-store";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
 import { apiRequest, friendlyApiError, getStudentToken } from "@/lib/api";
+
+type DiscountPricing = {
+  code: string;
+  original_amount: number;
+  discount_amount: number;
+  final_amount: number;
+  currency: string;
+};
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -74,23 +82,60 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function Payment() {
+  const [searchParams] = useSearchParams();
   const { courses } = useCourses();
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
-  const [courseId, setCourseId] = useState("");
   const [method, setMethod] = useState<"vodafone_cash" | "instapay">("vodafone_cash");
   const [senderPhone, setSenderPhone] = useState("");
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [pricing, setPricing] = useState<DiscountPricing | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  useEffect(() => {
-    if (!courseId && courses[0]) setCourseId(courses[0].id);
-  }, [courses, courseId]);
+  const requestedCourseId = searchParams.get("course");
+  const selectedCourse = courses.find((course) => course.id === requestedCourseId) ?? courses[0];
+  const displayedAmount = pricing?.final_amount ?? selectedCourse?.price ?? 0;
 
-  const selectedCourse = courses.find((course) => course.id === courseId);
+  async function applyCoupon() {
+    if (!user) return openLogin();
+    const token = getStudentToken();
+    if (!token) return openLogin();
+    if (!selectedCourse || !couponCode.trim()) return;
+    setApplyingCoupon(true);
+    setCouponError("");
+    try {
+      const response = await apiRequest<DiscountPricing>("/discount-codes/validate", {
+        method: "POST",
+        token,
+        body: JSON.stringify({ code: couponCode.trim(), course_id: Number(selectedCourse.id) }),
+      });
+      setPricing(response);
+      setCouponCode(response.code);
+    } catch (requestError) {
+      setPricing(null);
+      setCouponError(friendlyApiError(requestError));
+    } finally {
+      setApplyingCoupon(false);
+    }
+  }
+
+  function handleReceiptChange(file: File | null) {
+    setReceipt(file);
+    setReceiptPreview("");
+
+    if (file?.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = () => setReceiptPreview(String(reader.result ?? ""));
+      reader.readAsDataURL(file);
+    }
+  }
 
   async function submitPayment(event: React.FormEvent) {
     event.preventDefault();
@@ -99,15 +144,21 @@ export default function Payment() {
       return;
     }
     const token = getStudentToken();
-    if (!token || !selectedCourse) return;
+    if (!token) {
+      openLogin();
+      return;
+    }
+    if (!selectedCourse) {
+      setError("تعذر تحميل بيانات الكورس. حدّث الصفحة وحاول مرة أخرى.");
+      return;
+    }
     setSubmitting(true);
     setError("");
     setSuccess(false);
     const form = new FormData();
     form.append("course_id", selectedCourse.id);
     form.append("method", method);
-    form.append("amount", String(selectedCourse.price || 1));
-    form.append("currency", selectedCourse.currency || "EGP");
+    if (pricing?.code) form.append("coupon_code", pricing.code);
     if (senderPhone) form.append("sender_phone", senderPhone);
     if (reference) form.append("transaction_reference", reference);
     if (receipt) form.append("receipt", receipt);
@@ -116,6 +167,7 @@ export default function Payment() {
       setSuccess(true);
       setReference("");
       setReceipt(null);
+      setReceiptPreview("");
     } catch (requestError) {
       setError(friendlyApiError(requestError));
     } finally {
@@ -161,7 +213,7 @@ export default function Payment() {
 
           <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[#1A1A1A] px-5 py-2 rounded-full">
             <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>
-              {(selectedCourse?.price ?? 0).toLocaleString("ar-EG")}
+              {displayedAmount.toLocaleString("ar-EG")}
             </span>
             <span className="text-sm font-bold">{selectedCourse?.currency ?? "ج.م"}</span>
           </div>
@@ -239,16 +291,59 @@ export default function Payment() {
         >
           <h2 className="text-xl font-black mb-4">سجّل عملية الدفع</h2>
           <div className="space-y-3 text-start">
-            <select value={courseId} onChange={(event) => setCourseId(event.target.value)} required className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]">
-              {courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
-            </select>
+            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
+              <label className="mb-2 block text-sm font-bold">هل لديك كود خصم؟</label>
+              <div className="flex gap-2">
+                <input value={couponCode} onChange={(event) => { setCouponCode(event.target.value.toUpperCase()); setPricing(null); setCouponError(""); }} placeholder="اكتب كود الخصم" dir="ltr" className="h-11 min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 uppercase" />
+                <button type="button" onClick={() => void applyCoupon()} disabled={applyingCoupon || !couponCode.trim()} className="h-11 shrink-0 rounded-lg bg-[var(--color-fg)] px-5 text-sm font-bold text-[var(--color-bg)] disabled:opacity-50">{applyingCoupon ? "جاري..." : "تطبيق"}</button>
+              </div>
+              {couponError && <p className="mt-2 text-xs font-bold text-red-500">{couponError}</p>}
+              {pricing && (
+                <div className="mt-3 space-y-1 border-t border-dashed border-[var(--color-border)] pt-3 text-sm">
+                  <div className="flex justify-between text-[var(--color-muted)]"><span>السعر الأصلي</span><span>{pricing.original_amount.toLocaleString("ar-EG")} ج.م</span></div>
+                  <div className="flex justify-between text-green-600"><span>قيمة الخصم</span><span>- {pricing.discount_amount.toLocaleString("ar-EG")} ج.م</span></div>
+                  <div className="flex justify-between font-black"><span>المبلغ المطلوب تحويله</span><span>{pricing.final_amount.toLocaleString("ar-EG")} ج.م</span></div>
+                </div>
+              )}
+            </div>
             <input value={senderPhone} onChange={(event) => setSenderPhone(event.target.value)} placeholder="رقم الهاتف المحوّل منه" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
             <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="رقم العملية (اختياري)" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
-            <label className="block text-sm font-bold">صورة إيصال الدفع</label>
-            <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setReceipt(event.target.files?.[0] ?? null)} className="w-full text-sm" />
+            <label className="block cursor-pointer rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg)] p-5 text-center transition-colors hover:border-[var(--color-primary)]">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={(event) => handleReceiptChange(event.target.files?.[0] ?? null)}
+                className="sr-only"
+              />
+              <span className={`grid items-center gap-4 ${receiptPreview ? "sm:grid-cols-[1fr_160px]" : ""}`}>
+                <span className="flex min-w-0 flex-col items-center gap-2">
+                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                    <ImageUp size={22} strokeWidth={2} />
+                  </span>
+                  <span className="font-bold text-[var(--color-fg)]">
+                    {receipt ? "تم اختيار الإيصال" : "اختيار صورة إيصال الدفع"}
+                  </span>
+                  <span className="max-w-full truncate text-xs text-[var(--color-muted)]">
+                    {receipt ? receipt.name : "اضغط هنا لاختيار صورة أو ملف PDF"}
+                  </span>
+                </span>
+                {receiptPreview && (
+                  <img
+                    src={receiptPreview}
+                    alt="معاينة إيصال الدفع"
+                    className="h-36 w-full rounded-lg border border-[var(--color-border)] bg-white object-contain"
+                  />
+                )}
+              </span>
+            </label>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            {success && <p className="text-sm text-green-500">تم إرسال الدفع للمراجعة بنجاح.</p>}
-            <button type="submit" disabled={submitting || !selectedCourse} className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold disabled:opacity-50">
+            {success && (
+              <div className="rounded-xl bg-green-500/10 p-3 text-center text-sm text-green-600">
+                <p className="font-bold">تم إرسال الدفع للمراجعة بنجاح.</p>
+                <Link to="/dashboard" className="mt-1 inline-block underline">متابعة حالة الطلب من لوحة حسابي</Link>
+              </div>
+            )}
+            <button type="submit" disabled={submitting} className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-50">
               {!user ? "سجّل الدخول لإرسال الإيصال" : submitting ? "جاري الإرسال..." : "إرسال الإيصال للمراجعة"}
             </button>
             <p className="text-xs text-center text-[var(--color-muted)]">لو واجهتك مشكلة، <a href={config.whatsappSubscribe} target="_blank" rel="noreferrer" className="text-[#25D366] font-bold">تواصل معنا على واتساب</a>.</p>

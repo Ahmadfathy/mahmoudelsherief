@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Shield, UserRoundCog } from "lucide-react";
 import { adminLogout } from "@/lib/admin-auth";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -25,7 +25,7 @@ export function AdminHeader() {
           </div>
           <nav className="flex items-center gap-1">
             <NavLink to="/admin/subscribers" className={navLinkClass}>
-              المشتركين
+              الطلاب
             </NavLink>
             <NavLink to="/admin/courses" className={navLinkClass}>
               الكورسات
@@ -33,18 +33,30 @@ export function AdminHeader() {
             <NavLink to="/admin/payments" className={navLinkClass}>
               المدفوعات
             </NavLink>
+            <NavLink to="/admin/discount-codes" className={navLinkClass}>
+              أكواد الخصم
+            </NavLink>
+            <NavLink to="/admin/testimonials" className={navLinkClass}>
+              آراء العملاء
+            </NavLink>
           </nav>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            void adminLogout().finally(() => navigate("/admin", { replace: true }));
-          }}
-          className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-bold text-red-500 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut size={15} />
-          تسجيل الخروج
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <NavLink to="/admin/profile" className={navLinkClass} aria-label="حسابي">
+            <UserRoundCog size={16} />
+            <span className="hidden lg:inline">حسابي</span>
+          </NavLink>
+          <button
+            type="button"
+            onClick={() => {
+              void adminLogout().finally(() => navigate("/admin", { replace: true }));
+            }}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-red-500 transition-colors hover:bg-red-500/10"
+          >
+            <LogOut size={15} />
+            <span className="hidden lg:inline">تسجيل الخروج</span>
+          </button>
+        </div>
       </div>
     </header>
   );

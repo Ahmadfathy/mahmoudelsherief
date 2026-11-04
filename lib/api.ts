@@ -2,6 +2,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8000/api
 
 const STUDENT_TOKEN_KEY = "academy-api-token";
 const ADMIN_TOKEN_KEY = "academy-admin-api-token";
+export const STUDENT_SESSION_EXPIRED_EVENT = "academy-student-session-expired";
 
 export class ApiError extends Error {
   status: number;
@@ -38,10 +39,42 @@ export function apiUrl(path: string) {
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  name: "الاسم",
+  email: "البريد الإلكتروني",
+  phone: "رقم الموبايل",
+  password: "كلمة السر",
+  password_confirmation: "تأكيد كلمة السر",
+  current_password: "كلمة السر الحالية",
+  course_id: "الكورس",
+  receipt: "صورة الإيصال",
+};
+
+function translateValidationMessage(message: string) {
+  const fieldMatch = message.match(/^The ([\w.]+) field/);
+  const field = fieldMatch ? (FIELD_LABELS[fieldMatch[1]] ?? "هذا الحقل") : "هذا الحقل";
+
+  if (/field is required\.?$/i.test(message)) return `${field} مطلوب.`;
+  if (/field format is invalid\.?$/i.test(message)) return `${field} غير صحيح.`;
+  if (/has already been taken\.?$/i.test(message)) return `${field} مسجل بالفعل.`;
+  if (/must be a valid email address\.?$/i.test(message)) return "من فضلك اكتب بريدًا إلكترونيًا صحيحًا.";
+  if (/confirmation does not match\.?$/i.test(message)) return "تأكيد كلمة السر غير مطابق.";
+  if (/must be at least (\d+) characters/i.test(message)) {
+    const minimum = message.match(/must be at least (\d+) characters/i)?.[1] ?? "8";
+    return `${field} يجب ألا يقل عن ${minimum} حروف أو أرقام.`;
+  }
+  if (/selected .* is invalid\.?$/i.test(message)) return `${field} المحدد غير صالح.`;
+  if (message === "Unauthenticated.") return "انتهت جلسة الدخول. سجّل الدخول مرة أخرى.";
+  if (message === "Invalid credentials.") return "رقم الموبايل أو كلمة السر غير صحيحة.";
+  if (message === "This account is not active.") return "هذا الحساب موقوف. تواصل مع الإدارة.";
+  return message;
+}
+
 function errorMessage(payload: unknown, fallback: string) {
   if (!payload || typeof payload !== "object") return fallback;
   const data = payload as { message?: string; errors?: Record<string, string[]> };
-  return Object.values(data.errors ?? {})[0]?.[0] ?? data.message ?? fallback;
+  const message = Object.values(data.errors ?? {})[0]?.[0] ?? data.message ?? fallback;
+  return translateValidationMessage(message);
 }
 
 export async function apiRequest<T>(
@@ -62,8 +95,19 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     const body = payload as { message?: string; errors?: Record<string, string[]> } | null;
+    if (
+      response.status === 401 &&
+      token &&
+      typeof window !== "undefined" &&
+      token === getStudentToken()
+    ) {
+      window.dispatchEvent(new CustomEvent(STUDENT_SESSION_EXPIRED_EVENT));
+    }
+    const fallbackMessage = response.status === 413
+      ? "حجم الملف أكبر من الحد المسموح به على السيرفر."
+      : `Request failed (${response.status})`;
     throw new ApiError(
-      errorMessage(body, `Request failed (${response.status})`),
+      errorMessage(body, fallbackMessage),
       response.status,
       body?.errors
     );
@@ -83,6 +127,7 @@ export async function apiDownload(path: string, token: string): Promise<Blob> {
 export function friendlyApiError(error: unknown, fallback = "حصل خطأ، حاول مرة تانية.") {
   if (error instanceof ApiError) return error.message;
   if (error instanceof TypeError) return "تعذر الاتصال بالسيرفر. تأكد إن الباك شغال.";
+  if (error instanceof Error && error.message) return error.message;
   return fallback;
 }
 

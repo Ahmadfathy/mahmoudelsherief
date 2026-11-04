@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Plus, Trash2, Pencil, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Plus, Trash2, Pencil, ChevronDown, ImageUp } from "lucide-react";
 import type { Course } from "@/lib/academy-data";
 import { useCourses } from "@/lib/courses-store";
 import { LessonEditorForm } from "./LessonEditorForm";
+import { friendlyApiError } from "@/lib/api";
 
 export function CourseEditor({ course }: { course: Course }) {
   const {
@@ -23,6 +24,11 @@ export function CourseEditor({ course }: { course: Course }) {
   const [instructorName, setInstructorName] = useState(course.instructor.name);
   const [instructorTitle, setInstructorTitle] = useState(course.instructor.title);
   const [instructorBio, setInstructorBio] = useState(course.instructor.bio);
+  const [coverPreview, setCoverPreview] = useState(course.coverImageUrl ?? "");
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverError, setCoverError] = useState("");
+  const [lessonNotice, setLessonNotice] = useState("");
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const [newUnitTitle, setNewUnitTitle] = useState("");
   const [openUnitId, setOpenUnitId] = useState<string | null>(null);
@@ -31,11 +37,17 @@ export function CourseEditor({ course }: { course: Course }) {
     null
   );
 
+  useEffect(() => {
+    if (!lessonNotice) return;
+    const timeout = window.setTimeout(() => setLessonNotice(""), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [lessonNotice]);
+
   function saveMeta() {
     updateCourse(course.id, {
       title,
       subtitle,
-      requiresSubscription,
+      requiresSubscription: Number(price) > 0 && requiresSubscription,
       price: Number(price) || 0,
       isPublished,
       instructor: { name: instructorName, title: instructorTitle, bio: instructorBio },
@@ -49,10 +61,54 @@ export function CourseEditor({ course }: { course: Course }) {
     setNewUnitTitle("");
   }
 
+  async function handleCoverChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const localPreview = URL.createObjectURL(file);
+    setCoverPreview(localPreview);
+    setCoverUploading(true);
+    setCoverError("");
+    try {
+      const updated = await updateCourse(course.id, { coverImageFile: file });
+      setCoverPreview(updated.coverImageUrl ?? localPreview);
+    } catch (uploadError) {
+      setCoverPreview(course.coverImageUrl ?? "");
+      setCoverError(friendlyApiError(uploadError, "تعذر رفع صورة الكورس."));
+    } finally {
+      URL.revokeObjectURL(localPreview);
+      setCoverUploading(false);
+      event.target.value = "";
+    }
+  }
+
   return (
     <div className="space-y-5">
+      {lessonNotice && (
+        <div className="fixed start-1/2 top-5 z-[260] flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-green-800 shadow-xl" role="status">
+          <CheckCircle2 size={22} className="shrink-0" />
+          <p className="text-sm font-bold">{lessonNotice}</p>
+        </div>
+      )}
       {/* Course meta */}
       <div className="space-y-2">
+        <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-subtle)]">
+          <div className="relative grid aspect-[16/5] place-items-center overflow-hidden">
+            {coverPreview ? (
+              <img src={coverPreview} alt={`غلاف ${course.title}`} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-[var(--color-muted)]">
+                <ImageUp size={32} strokeWidth={1.5} />
+                <span className="text-sm">لم تتم إضافة صورة للكورس</span>
+              </div>
+            )}
+            <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverChange} className="hidden" />
+            <button type="button" disabled={coverUploading} onClick={() => coverInputRef.current?.click()} className="absolute bottom-3 end-3 inline-flex h-10 items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 text-sm font-bold text-white shadow-lg transition-opacity hover:opacity-90 disabled:opacity-60">
+              <ImageUp size={17} />
+              {coverUploading ? "جاري رفع الصورة..." : coverPreview ? "تغيير صورة الكورس" : "رفع صورة للكورس"}
+            </button>
+          </div>
+          {coverError && <p className="px-4 py-2 text-sm font-bold text-red-500">{coverError}</p>}
+        </div>
         <input
           type="text"
           value={title}
@@ -65,7 +121,10 @@ export function CourseEditor({ course }: { course: Course }) {
           type="number"
           min="0"
           value={price}
-          onChange={(e) => setPrice(e.target.value)}
+          onChange={(e) => {
+            setPrice(e.target.value);
+            if (Number(e.target.value) <= 0) setRequiresSubscription(false);
+          }}
           onBlur={saveMeta}
           placeholder="سعر الكورس بالجنيه"
           className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
@@ -108,13 +167,14 @@ export function CourseEditor({ course }: { course: Course }) {
           <input
             type="checkbox"
             checked={requiresSubscription}
+            disabled={Number(price) <= 0}
             onChange={(e) => {
               setRequiresSubscription(e.target.checked);
               updateCourse(course.id, { requiresSubscription: e.target.checked });
             }}
             className="w-4 h-4 accent-[var(--color-primary)]"
           />
-          يتطلب اشتراك مفعّل
+          {Number(price) <= 0 ? "مجاني تلقائيًا — لا يحتاج اشتراك" : "يتطلب اشتراك مفعّل"}
         </label>
         <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
           <input
@@ -186,8 +246,9 @@ export function CourseEditor({ course }: { course: Course }) {
                           key={lesson.id}
                           initial={lesson}
                           onCancel={() => setEditingLesson(null)}
-                          onSubmit={(patch) => {
-                            updateLesson(course.id, unit.id, lesson.id, patch);
+                          onSubmit={async (patch) => {
+                            await updateLesson(course.id, unit.id, lesson.id, patch);
+                            setLessonNotice(patch.videoFile ? "تم رفع الفيديو وتحديث الدرس بنجاح." : patch.thumbnailFile ? "تم رفع صورة الفيديو وتحديث الدرس بنجاح." : "تم تحديث الدرس بنجاح.");
                             setEditingLesson(null);
                           }}
                         />
@@ -196,7 +257,10 @@ export function CourseEditor({ course }: { course: Course }) {
                           key={lesson.id}
                           className="flex items-center justify-between gap-2 p-2.5 rounded-md bg-[var(--color-subtle)] text-sm"
                         >
-                          <span>{lesson.title}</span>
+                          <span className="flex min-w-0 items-center gap-3">
+                            {lesson.thumbnailImageUrl && <img src={lesson.thumbnailImageUrl} alt="" className="h-10 w-16 shrink-0 rounded-md border border-[var(--color-border)] object-cover" />}
+                            <span className="truncate">{lesson.title}</span>
+                          </span>
                           <div className="flex items-center gap-1 shrink-0">
                             <button
                               type="button"
@@ -226,8 +290,9 @@ export function CourseEditor({ course }: { course: Course }) {
                     {addingLessonUnitId === unit.id ? (
                       <LessonEditorForm
                         onCancel={() => setAddingLessonUnitId(null)}
-                        onSubmit={(lesson) => {
-                          addLesson(course.id, unit.id, lesson);
+                        onSubmit={async (lesson) => {
+                          await addLesson(course.id, unit.id, lesson);
+                          setLessonNotice(lesson.videoFile ? "تم رفع الفيديو وإضافة الدرس بنجاح." : lesson.thumbnailFile ? "تم رفع صورة الفيديو وإضافة الدرس بنجاح." : "تم إضافة الدرس بنجاح.");
                           setAddingLessonUnitId(null);
                         }}
                       />

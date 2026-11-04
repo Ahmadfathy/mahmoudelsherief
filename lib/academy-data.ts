@@ -8,6 +8,7 @@ export type LessonResourceFile = {
   id?: string;
   label: string;
   url: string;
+  filePath?: string;
 };
 
 export type Lesson = {
@@ -17,7 +18,13 @@ export type Lesson = {
   durationSeconds?: number;
   videoType?: "youtube" | "vimeo" | "url" | "upload";
   videoUrl?: string;
+  videoPath?: string;
+  videoOriginalName?: string;
   videoFile?: File;
+  thumbnailImage?: string;
+  thumbnailImageUrl?: string;
+  thumbnailFile?: File;
+  resourceFiles?: File[];
   description?: string;
   links?: LessonResourceLink[];
   files?: LessonResourceFile[];

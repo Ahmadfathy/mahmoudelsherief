@@ -3,6 +3,8 @@ import { useNavigate, Navigate } from "react-router-dom";
 import { Shield } from "lucide-react";
 import { useAdminSession } from "@/lib/admin-auth";
 import { friendlyApiError } from "@/lib/api";
+import { EgyptPhoneInput, isValidEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PasswordInput } from "@/components/academy/PasswordInput";
 
 export default function Admin() {
   const { isAdmin, login } = useAdminSession();
@@ -16,8 +18,12 @@ export default function Admin() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
+    if (!isValidEgyptPhoneInput(phone)) {
+      setError("رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+      return;
+    }
+    setSubmitting(true);
     try {
       await login(phone, password);
       navigate("/admin/subscribers");
@@ -32,6 +38,7 @@ export default function Admin() {
     <div className="min-h-screen bg-[var(--color-bg)] grid place-items-center px-5" dir="rtl">
       <form
         onSubmit={handleSubmit}
+        noValidate
         className="w-full max-w-sm bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shadow-xl"
       >
         <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-[var(--color-primary)]/10 grid place-items-center">
@@ -44,24 +51,8 @@ export default function Admin() {
           دخول الأدمن
         </h1>
         <div className="space-y-3">
-          <input
-            type="tel"
-            inputMode="numeric"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="رقم الموبايل"
-            autoFocus
-            required
-            className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-          />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="كلمة السر"
-            required
-            className="w-full h-11 px-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
-          />
+          <EgyptPhoneInput value={phone} onChange={(value) => { setPhone(value); setError(""); }} invalid={Boolean(error) && !isValidEgyptPhoneInput(phone)} autoFocus className="h-11 rounded-lg" inputBackgroundClassName="bg-[var(--color-bg)]" />
+          <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-4 text-[var(--color-fg)]" />
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"

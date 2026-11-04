@@ -6,7 +6,7 @@ type AdminUser = { id: number; name: string; email: string; role: string; status
 export async function adminLogin(phone: string, password: string) {
   const response = await apiRequest<{ user: AdminUser; token: string }>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ phone, password, device_name: "academy-admin" }),
+    body: JSON.stringify({ phone, password, device_name: "academy-admin", login_as: "admin" }),
   });
   if (response.user.role !== "admin") {
     try {

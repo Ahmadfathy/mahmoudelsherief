@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -10,6 +10,10 @@ import {
   Link2,
   FileDown,
   ArrowLeft,
+  Maximize,
+  Pause,
+  Play,
+  Volume2,
 } from "lucide-react";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import type { Lesson } from "@/lib/academy-data";
@@ -19,12 +23,241 @@ import { useAuthModal } from "@/lib/auth-modal-context";
 import { useCourseProgress } from "@/lib/progress";
 import { apiDownload, friendlyApiError, getStudentToken } from "@/lib/api";
 
+function getYouTubeId(url: string): string | null {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "").replace(/^m\./, "");
+    let youtubeId = "";
+
+    if (host === "youtu.be") {
+      youtubeId = parsed.pathname.split("/").filter(Boolean)[0] ?? "";
+    } else if (host === "youtube.com" || host === "youtube-nocookie.com") {
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      if (parsed.pathname === "/watch") youtubeId = parsed.searchParams.get("v") ?? "";
+      else if (["embed", "shorts", "live"].includes(parts[0])) youtubeId = parts[1] ?? "";
+    }
+
+    return youtubeId || null;
+  } catch {
+    return null;
+  }
+}
+
 function getEmbedUrl(url: string): string | null {
-  const yt = url.match(/(?:youtu\.be\/|youtube\.com\/watch\?v=|youtube\.com\/embed\/)([\w-]+)/);
-  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
   const vimeo = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
-  return null;
+  return vimeo ? `https://player.vimeo.com/video/${vimeo[1]}` : null;
+}
+
+type YouTubePlayerInstance = {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  getCurrentTime: () => number;
+  getDuration: () => number;
+  getVolume: () => number;
+  setVolume: (volume: number) => void;
+  destroy: () => void;
+};
+
+type YouTubePlayerEvent = { target: YouTubePlayerInstance; data: number };
+type YouTubeApi = {
+  Player: new (element: HTMLElement, options: {
+    videoId: string;
+    playerVars: Record<string, string | number>;
+    events: {
+      onReady: (event: YouTubePlayerEvent) => void;
+      onStateChange: (event: YouTubePlayerEvent) => void;
+    };
+  }) => YouTubePlayerInstance;
+};
+
+declare global {
+  interface Window {
+    YT?: YouTubeApi;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<YouTubeApi> | null = null;
+
+function loadYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+  youtubeApiPromise = new Promise((resolve) => {
+    const previousCallback = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previousCallback?.();
+      if (window.YT) resolve(window.YT);
+    };
+    if (!document.querySelector("script[data-youtube-player-api]")) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.dataset.youtubePlayerApi = "true";
+      document.head.appendChild(script);
+    }
+  });
+  return youtubeApiPromise;
+}
+
+function formatVideoTime(seconds: number) {
+  if (!Number.isFinite(seconds)) return "0:00";
+  const minutes = Math.floor(seconds / 60);
+  const remainder = Math.floor(seconds % 60);
+  return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function CourseVideoPlayer({ src, title }: { src: string; title?: string }) {
+  const playerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+
+  function togglePlayback() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) void video.play();
+    else video.pause();
+  }
+
+  function seek(value: number) {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = value;
+    setCurrentTime(value);
+  }
+
+  function changeVolume(value: number) {
+    const video = videoRef.current;
+    if (!video) return;
+    video.volume = value;
+    setVolume(value);
+  }
+
+  return (
+    <div ref={playerRef} className="group relative h-full w-full overflow-hidden bg-black">
+      <video
+        ref={videoRef}
+        src={src}
+        title={title}
+        preload="metadata"
+        playsInline
+        onClick={togglePlayback}
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
+        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        className="h-full w-full cursor-pointer object-contain"
+      />
+      {!playing && (
+        <button type="button" onClick={togglePlayback} aria-label="تشغيل الفيديو" className="absolute inset-0 m-auto grid h-16 w-16 place-items-center rounded-full bg-white/90 text-[var(--color-primary)] shadow-xl">
+          <Play size={28} fill="currentColor" />
+        </button>
+      )}
+      <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/90 via-black/65 to-transparent px-4 pb-3 pt-8 text-white" dir="ltr">
+        <button type="button" onClick={togglePlayback} aria-label={playing ? "إيقاف مؤقت" : "تشغيل"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-white/25">
+          {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+        </button>
+        <span className="shrink-0 text-xs tabular-nums">{formatVideoTime(currentTime)} / {formatVideoTime(duration)}</span>
+        <input type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} onChange={(event) => seek(Number(event.target.value))} aria-label="وقت الفيديو" className="min-w-0 flex-1 accent-[var(--color-primary)]" />
+        <Volume2 size={17} className="hidden shrink-0 sm:block" />
+        <input type="range" min="0" max="1" step="0.05" value={volume} onChange={(event) => changeVolume(Number(event.target.value))} aria-label="مستوى الصوت" className="hidden w-20 accent-[var(--color-primary)] sm:block" />
+        <button type="button" onClick={() => void playerRef.current?.requestFullscreen()} aria-label="ملء الشاشة" className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-white/15">
+          <Maximize size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function YouTubeVideoPlayer({ videoId }: { videoId: string; title?: string }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const instanceRef = useRef<YouTubePlayerInstance | null>(null);
+  const [ready, setReady] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(100);
+
+  useEffect(() => {
+    let disposed = false;
+    if (!playerRef.current) return;
+    void loadYouTubeApi().then((YT) => {
+      if (disposed || !playerRef.current) return;
+      instanceRef.current = new YT.Player(playerRef.current, {
+        videoId,
+        playerVars: {
+          controls: 1,
+          disablekb: 0,
+          fs: 1,
+          playsinline: 1,
+          rel: 0,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event) => {
+            setReady(true);
+            setDuration(event.target.getDuration());
+            setVolume(event.target.getVolume());
+          },
+          onStateChange: (event) => setPlaying(event.data === 1),
+        },
+      });
+    });
+    return () => {
+      disposed = true;
+      instanceRef.current?.destroy();
+      instanceRef.current = null;
+    };
+  }, [videoId]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const timer = window.setInterval(() => {
+      const player = instanceRef.current;
+      if (!player) return;
+      setCurrentTime(player.getCurrentTime() || 0);
+      setDuration(player.getDuration() || 0);
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [ready]);
+
+  function togglePlayback() {
+    const player = instanceRef.current;
+    if (!player) return;
+    if (playing) player.pauseVideo();
+    else player.playVideo();
+  }
+
+  function seek(seconds: number) {
+    instanceRef.current?.seekTo(seconds, true);
+    setCurrentTime(seconds);
+  }
+
+  function changeVolume(value: number) {
+    instanceRef.current?.setVolume(value);
+    setVolume(value);
+  }
+
+  return (
+    <div ref={hostRef} className="relative h-full w-full overflow-hidden bg-black">
+      <div ref={playerRef} className="h-full w-full" />
+      <div className="absolute inset-x-0 bottom-0 z-10 flex items-center gap-3 bg-gradient-to-t from-black/95 via-black/75 to-transparent px-4 pb-3 pt-8 text-white" dir="ltr">
+        <button type="button" disabled={!ready} onClick={togglePlayback} aria-label={playing ? "إيقاف مؤقت" : "تشغيل"} className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 hover:bg-white/25 disabled:opacity-50">
+          {playing ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" />}
+        </button>
+        <span className="shrink-0 text-xs tabular-nums">{formatVideoTime(currentTime)} / {formatVideoTime(duration)}</span>
+        <input type="range" min="0" max={duration || 0} step="1" value={Math.min(currentTime, duration || 0)} disabled={!ready} onChange={(event) => seek(Number(event.target.value))} aria-label="وقت الفيديو" className="min-w-0 flex-1 accent-[var(--color-primary)]" />
+        <Volume2 size={17} className="hidden shrink-0 sm:block" />
+        <input type="range" min="0" max="100" step="1" value={volume} disabled={!ready} onChange={(event) => changeVolume(Number(event.target.value))} aria-label="مستوى الصوت" className="hidden w-20 accent-[var(--color-primary)] sm:block" />
+        <button type="button" onClick={() => void hostRef.current?.requestFullscreen()} aria-label="ملء الشاشة" className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-white/15">
+          <Maximize size={18} />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function CourseDetail() {
@@ -44,6 +277,7 @@ export default function CourseDetail() {
 
   const [openUnitId, setOpenUnitId] = useState(course?.units[0]?.id ?? "");
   const [activeLessonId, setActiveLessonId] = useState(flatLessons[0]?.id ?? "");
+  const [thumbnailDismissed, setThumbnailDismissed] = useState(false);
 
   const courseLocked = course ? course.requiresSubscription && !hasAccess(course.slug) : false;
   const { isCompleted, markCompleted } = useCourseProgress(
@@ -86,6 +320,10 @@ export default function CourseDetail() {
   }, [activeLessonId, flatLessons, courseLocked]);
 
   useEffect(() => {
+    setThumbnailDismissed(false);
+  }, [activeLessonId]);
+
+  useEffect(() => {
     if (courseLocked && !user) openLogin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [course?.id, courseLocked, user]);
@@ -109,6 +347,7 @@ export default function CourseDetail() {
     if (nextLesson) setActiveLessonId(nextLesson.id);
   }
 
+  const youtubeId = activeLesson?.videoUrl ? getYouTubeId(activeLesson.videoUrl) : null;
   const embedUrl = activeLesson?.videoUrl ? getEmbedUrl(activeLesson.videoUrl) : null;
   const directVideoUrl = activeLesson?.videoType === "upload" ? protectedVideoUrl : activeLesson?.videoUrl;
 
@@ -150,16 +389,27 @@ export default function CourseDetail() {
             {/* Main content */}
             <div className="flex-1 min-w-0">
               <div className="rounded-2xl overflow-hidden border border-[var(--color-border)] bg-black aspect-video grid place-items-center">
-                {embedUrl ? (
+                {activeLesson?.thumbnailImageUrl && !thumbnailDismissed ? (
+                  <button type="button" onClick={() => setThumbnailDismissed(true)} className="group relative h-full w-full" aria-label={`تشغيل ${activeLesson.title}`}>
+                    <img src={activeLesson.thumbnailImageUrl} alt={`صورة درس ${activeLesson.title}`} className="h-full w-full object-cover" />
+                    <span className="absolute inset-0 bg-black/20 transition-colors group-hover:bg-black/30" />
+                    <span className="absolute inset-0 m-auto grid h-16 w-16 place-items-center rounded-full bg-white/90 text-[var(--color-primary)] shadow-xl transition-transform group-hover:scale-105">
+                      <Play size={28} fill="currentColor" />
+                    </span>
+                  </button>
+                ) : youtubeId ? (
+                  <YouTubeVideoPlayer videoId={youtubeId} title={activeLesson?.title} />
+                ) : embedUrl ? (
                   <iframe
                     src={embedUrl}
                     title={activeLesson?.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
-                    className="w-full h-full"
+                    className="block w-full h-full"
                   />
                 ) : directVideoUrl ? (
-                  <video src={directVideoUrl} controls className="w-full h-full" />
+                  <CourseVideoPlayer src={directVideoUrl} title={activeLesson?.title} />
                 ) : (
                   <div className="text-center text-white/60 p-8">
                     <PlayCircle size={40} className="mx-auto mb-3" strokeWidth={1.5} />
@@ -281,7 +531,12 @@ export default function CourseDetail() {
                                       className={`w-full flex items-center gap-3 py-3 ps-8 pe-4 text-start text-sm transition-colors
                                         ${active ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-bold" : "hover:bg-[var(--color-subtle)]"}`}
                                     >
-                                      {done ? (
+                                      {lesson.thumbnailImageUrl ? (
+                                        <span className="relative h-10 w-16 shrink-0 overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-subtle)]">
+                                          <img src={lesson.thumbnailImageUrl} alt="" className="h-full w-full object-cover" />
+                                          {done && <span className="absolute inset-0 grid place-items-center bg-black/35"><CheckCircle2 size={18} className="text-white" /></span>}
+                                        </span>
+                                      ) : done ? (
                                         <CheckCircle2 size={16} className="shrink-0 text-green-500" />
                                       ) : (
                                         <Circle size={16} className="shrink-0 text-[var(--color-muted)]" />

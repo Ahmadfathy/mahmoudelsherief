@@ -4,10 +4,17 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { ApiError, apiRequest, getStudentToken, setStudentToken } from "@/lib/api";
+import {
+  ApiError,
+  STUDENT_SESSION_EXPIRED_EVENT,
+  apiRequest,
+  getStudentToken,
+  setStudentToken,
+} from "@/lib/api";
 
 export type AuthUser = {
   id: string;
@@ -19,7 +26,7 @@ export type AuthUser = {
   approvedCourseSlugs: string[];
 };
 
-export type LoginResult = "ok" | "invalid" | "suspended" | "error";
+export type LoginResult = "ok" | "invalid" | "admin_account" | "suspended" | "error";
 
 type RegisterInput = {
   name: string;
@@ -35,6 +42,7 @@ type AuthContextValue = {
   login: (phone: string, password: string) => Promise<LoginResult>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   refreshAccess: () => Promise<void>;
   requestSubscription: (courseId: string, notes?: string) => Promise<void>;
   hasAccess: (courseSlug: string) => boolean;
@@ -75,6 +83,8 @@ async function fetchApprovedSlugs(token: string) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const checkingSession = useRef(false);
 
   const restoreSession = useCallback(async () => {
     const token = getStudentToken();
@@ -99,18 +109,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void restoreSession();
   }, [restoreSession]);
 
+  useEffect(() => {
+    const expireSession = () => {
+      setStudentToken(null);
+      setUser(null);
+      setSessionExpired(true);
+    };
+
+    window.addEventListener(STUDENT_SESSION_EXPIRED_EVENT, expireSession);
+    return () => window.removeEventListener(STUDENT_SESSION_EXPIRED_EVENT, expireSession);
+  }, []);
+
+  useEffect(() => {
+    if (!user || user.role !== "student") return;
+
+    const verifySession = async () => {
+      const token = getStudentToken();
+      if (!token || checkingSession.current) return;
+
+      checkingSession.current = true;
+      try {
+        await apiRequest("/me", { token });
+      } catch (error) {
+        // apiRequest emits the session-expired event for 401 responses. Network
+        // errors are deliberately ignored so a temporary outage does not log out.
+        if (!(error instanceof ApiError) || error.status !== 401) return;
+      } finally {
+        checkingSession.current = false;
+      }
+    };
+
+    const interval = window.setInterval(() => void verifySession(), 25_000);
+    const verifyWhenActive = () => {
+      if (document.visibilityState === "visible") void verifySession();
+    };
+    window.addEventListener("focus", verifyWhenActive);
+    document.addEventListener("visibilitychange", verifyWhenActive);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", verifyWhenActive);
+      document.removeEventListener("visibilitychange", verifyWhenActive);
+    };
+  }, [user?.id, user?.role]);
+
   async function login(phone: string, password: string): Promise<LoginResult> {
     try {
       const response = await apiRequest<{ user: ApiUser; token: string }>("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ phone, password, device_name: "academy-web" }),
+        body: JSON.stringify({ phone, password, device_name: "academy-web", login_as: "student" }),
       });
+      if (response.user.role !== "student") {
+        try {
+          await apiRequest("/auth/logout", { method: "POST", token: response.token });
+        } catch {
+          // The unexpected token is discarded below even if revocation is unavailable.
+        }
+        return "admin_account";
+      }
+      setSessionExpired(false);
       setStudentToken(response.token);
       const slugs = response.user.role === "student" ? await fetchApprovedSlugs(response.token) : [];
       setUser(mapUser(response.user, slugs));
       return "ok";
     } catch (error) {
-      if (error instanceof ApiError && error.status === 422) return "invalid";
+      if (error instanceof ApiError && error.status === 422) {
+        if (error.message.includes("حساب أدمن")) return "admin_account";
+        return "invalid";
+      }
       if (error instanceof ApiError && error.status === 403) return "suspended";
       return "error";
     }
@@ -128,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         device_name: "academy-web",
       }),
     });
+    setSessionExpired(false);
     setStudentToken(response.token);
     setUser(mapUser(response.user));
     if (input.courseId) {
@@ -144,6 +211,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token || !user) return;
     const slugs = await fetchApprovedSlugs(token);
     setUser((current) => (current ? { ...current, approvedCourseSlugs: slugs } : current));
+  }
+
+  async function refreshProfile() {
+    const token = getStudentToken();
+    if (!token) return;
+    const response = await apiRequest<{ user: ApiUser }>("/me", { token });
+    setUser((current) => mapUser(response.user, current?.approvedCourseSlugs ?? []));
   }
 
   async function requestSubscription(courseId: string, notes?: string) {
@@ -173,6 +247,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       logout,
+      refreshProfile,
       refreshAccess,
       requestSubscription,
       hasAccess: (courseSlug) => Boolean(user?.approvedCourseSlugs.includes(courseSlug)),
@@ -180,7 +255,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [user, loading]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {sessionExpired && (
+        <div
+          className="fixed inset-0 z-[200] grid place-items-center bg-black/45 px-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="session-expired-title"
+          dir="rtl"
+        >
+          <div className="w-full max-w-md rounded-3xl bg-white p-7 text-center shadow-2xl">
+            <h2 id="session-expired-title" className="text-2xl font-bold text-gray-950">
+              تم تسجيل خروجك
+            </h2>
+            <p className="mt-3 leading-7 text-gray-600">
+              تم فتح الحساب من جهاز أو متصفح آخر، لذلك أُغلقت هذه الجلسة لحماية حسابك.
+            </p>
+            <button
+              type="button"
+              onClick={() => setSessionExpired(false)}
+              className="mt-6 w-full rounded-full bg-[var(--color-primary)] px-5 py-3 font-bold text-white"
+            >
+              تسجيل الدخول مرة أخرى
+            </button>
+          </div>
+        </div>
+      )}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthContextValue {

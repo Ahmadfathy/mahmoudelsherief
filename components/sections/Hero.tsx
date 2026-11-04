@@ -206,7 +206,7 @@ export function Hero() {
               transition={{ duration: 0.5, delay: 0.58 }}
               className="flex flex-wrap items-center gap-3"
             >
-              <Button href="/payment" variant="primary" size="lg" magnetic>
+              <Button href="/subscribe" variant="primary" size="lg" magnetic>
                 {heroContent.ctaPrimary}
               </Button>
               <Button href={config.whatsappDetails} variant="outline" size="lg" external>

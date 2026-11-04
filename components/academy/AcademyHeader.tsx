@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, GraduationCap, Home } from "lucide-react";
+import { User, LogOut, GraduationCap, Home, LayoutDashboard, UserRoundCog } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { config } from "@/lib/config";
+import { formatEgyptPhone } from "@/components/academy/EgyptPhoneInput";
 
 export function AcademyHeader() {
   const { user, logout } = useAuth();
@@ -37,18 +38,18 @@ export function AcademyHeader() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/"
+            to={user ? "/dashboard" : "/academy"}
             className="hidden sm:inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-[var(--color-border)] text-sm font-bold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Home size={15} strokeWidth={1.75} />
-            عودة للرئيسية
+            {user ? <LayoutDashboard size={15} strokeWidth={1.75} /> : <Home size={15} strokeWidth={1.75} />}
+            {user ? "لوحة حسابي" : "العودة للأكاديمية"}
           </Link>
           <Link
-            to="/"
-            aria-label="عودة للرئيسية"
+            to={user ? "/dashboard" : "/academy"}
+            aria-label={user ? "لوحة حسابي" : "العودة للأكاديمية"}
             className="sm:hidden grid place-items-center w-10 h-10 rounded-full border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
-            <Home size={16} strokeWidth={1.75} />
+            {user ? <LayoutDashboard size={16} strokeWidth={1.75} /> : <Home size={16} strokeWidth={1.75} />}
           </Link>
           <ThemeToggle />
 
@@ -82,8 +83,27 @@ export function AcademyHeader() {
                 >
                   <div className="px-4 py-3 border-b border-[var(--color-border)]">
                     <p className="font-bold text-sm truncate">{user.name}</p>
-                    <p className="text-xs text-[var(--color-muted)] truncate" dir="ltr">{user.phone}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--color-muted)]" dir="ltr">
+                      <span aria-hidden="true">🇪🇬</span>
+                      <span>{formatEgyptPhone(user.phone)}</span>
+                    </p>
                   </div>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-sm transition-colors hover:bg-[var(--color-subtle)]"
+                  >
+                    <LayoutDashboard size={16} strokeWidth={1.75} />
+                    لوحة حسابي
+                  </Link>
+                  <Link
+                    to="/profile"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-sm transition-colors hover:bg-[var(--color-subtle)]"
+                  >
+                    <UserRoundCog size={16} strokeWidth={1.75} />
+                    تعديل الملف الشخصي
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {

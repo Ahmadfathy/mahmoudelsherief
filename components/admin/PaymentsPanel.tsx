@@ -7,6 +7,8 @@ type Payment = {
   id: number;
   method: "vodafone_cash" | "instapay";
   amount: string;
+  original_amount?: string | null;
+  discount_amount?: string | null;
   currency: string;
   sender_phone?: string | null;
   transaction_reference?: string | null;
@@ -14,6 +16,7 @@ type Payment = {
   status: PaymentStatus;
   user: { name: string; email: string; phone?: string | null };
   course: { title: string; slug: string };
+  discount_code?: { code: string; type: string; value: string } | null;
 };
 
 const labels: Record<PaymentStatus, string> = {
@@ -24,7 +27,7 @@ const labels: Record<PaymentStatus, string> = {
 
 export function PaymentsPanel() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [filter, setFilter] = useState<PaymentStatus | "all">("pending");
+  const [filter, setFilter] = useState<PaymentStatus | "all">("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -80,7 +83,7 @@ export function PaymentsPanel() {
   return (
     <div>
       <div className="flex flex-wrap gap-2 mb-5">
-        {(["pending", "verified", "rejected", "all"] as const).map((item) => (
+        {(["all", "pending", "verified", "rejected"] as const).map((item) => (
           <button key={item} onClick={() => setFilter(item)} className={`h-9 px-4 rounded-full text-sm font-bold ${filter === item ? "bg-[var(--color-primary)] text-white" : "bg-[var(--color-subtle)]"}`}>
             {item === "all" ? "الكل" : labels[item]}
           </button>
@@ -97,7 +100,11 @@ export function PaymentsPanel() {
               <tr key={payment.id} className="border-b border-[var(--color-border)] last:border-0">
                 <td className="p-3"><p className="font-bold">{payment.user.name}</p><p className="text-xs text-[var(--color-muted)]">{payment.user.email}</p></td>
                 <td className="p-3">{payment.course.title}</td>
-                <td className="p-3 whitespace-nowrap">{Number(payment.amount).toLocaleString("ar-EG")} {payment.currency}</td>
+                <td className="p-3 whitespace-nowrap">
+                  <p className="font-bold">{Number(payment.amount).toLocaleString("ar-EG")} {payment.currency}</p>
+                  {Number(payment.discount_amount ?? 0) > 0 && <p className="text-xs text-green-600">خصم {Number(payment.discount_amount).toLocaleString("ar-EG")} — {payment.discount_code?.code}</p>}
+                  {Number(payment.discount_amount ?? 0) > 0 && <p className="text-xs text-[var(--color-muted)] line-through">{Number(payment.original_amount).toLocaleString("ar-EG")}</p>}
+                </td>
                 <td className="p-3">{payment.method === "instapay" ? "InstaPay" : "Vodafone Cash"}</td>
                 <td className="p-3">{labels[payment.status]}</td>
                 <td className="p-3"><div className="flex gap-1 whitespace-nowrap">

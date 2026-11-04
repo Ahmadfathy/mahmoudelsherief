@@ -31,7 +31,7 @@ export function CoursesPanel() {
       course = await addCourse({
         title: title.trim(),
         subtitle: subtitle.trim(),
-        requiresSubscription,
+        requiresSubscription: Number(price) > 0 && requiresSubscription,
         instructorName: instructorName.trim(),
         instructorTitle: instructorTitle.trim(),
         instructorBio: instructorBio.trim(),
@@ -86,7 +86,10 @@ export function CoursesPanel() {
             type="number"
             min="0"
             value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            onChange={(e) => {
+              setPrice(e.target.value);
+              if (Number(e.target.value) <= 0) setRequiresSubscription(false);
+            }}
             placeholder="سعر الكورس بالجنيه"
             className="w-full h-10 px-3 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]"
           />
@@ -124,10 +127,11 @@ export function CoursesPanel() {
             <input
               type="checkbox"
               checked={requiresSubscription}
+              disabled={Number(price) <= 0}
               onChange={(e) => setRequiresSubscription(e.target.checked)}
               className="w-4 h-4 accent-[var(--color-primary)]"
             />
-            يتطلب اشتراك مفعّل
+            {Number(price) <= 0 ? "مجاني تلقائيًا — لا يحتاج اشتراك" : "يتطلب اشتراك مفعّل"}
           </label>
           <button
             type="submit"
