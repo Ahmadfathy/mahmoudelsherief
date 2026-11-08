@@ -32,7 +32,7 @@ export const config = {
 
   // Hero video
   heroVideo: "/videos/hero.mp4",
-  heroPoster: "/videos/hero-poster.jpg",
+  heroPoster: "/videos/hero-poster.svg",
 
   // Brand
   brandName: "Mahmoud Sherief",
