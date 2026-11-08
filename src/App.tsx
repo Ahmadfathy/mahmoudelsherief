@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { AuthModalProvider } from "@/lib/auth-modal-context";
 import { CoursesProvider } from "@/lib/courses-store";
 import Home from "./pages/Home";
+import ComingSoon from "./pages/ComingSoon";
 import Payment from "./pages/Payment";
 import Academy from "./pages/Academy";
 import CourseDetail from "./pages/CourseDetail";
@@ -28,7 +29,9 @@ export default function App() {
           <BrowserRouter>
             <AuthModalProvider>
               <Routes>
-                <Route path="/" element={<Home />} />
+                {/* TEMPORARY: Coming Soon page as root. Home moved to /home during development. Revert when ready to launch. */}
+                <Route path="/" element={<ComingSoon />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/subscribe" element={<SubscriptionEntry />} />
                 <Route path="/dashboard" element={<StudentDashboard />} />

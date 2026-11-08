@@ -7,7 +7,7 @@ export const config = {
   // Contact links
   phone: "+201012205238",
   whatsappNumber: "201012205238",
-  email: "info@example.com",
+  email: "mahmoudsherief6@gmail.com",
 
   // CTA destinations
   whatsappDetails:
@@ -28,7 +28,7 @@ export const config = {
   // Direct contact buttons
   tel: "tel:+201012205238",
   whatsappContact: "https://wa.me/201012205238",
-  mailto: "mailto:info@example.com",
+  mailto: "mailto:mahmoudsherief6@gmail.com",
 
   // Hero video
   heroVideo: "/videos/hero.mp4",
