@@ -15,6 +15,8 @@ export function Header() {
   const [activeId, setActiveId] = useState<string>("hero");
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastScrollY = useRef(0);
+  const desktopNavIds: readonly string[] = ["hero", "about", "course", "features", "pricing", "contact"];
+  const desktopNavItems = navItems.filter((item) => desktopNavIds.includes(item.id));
   const ticking = useRef(false);
 
   // Hide on scroll down, show on scroll up
@@ -108,7 +110,7 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
+            {desktopNavItems.map((item) => {
               const isActive = activeId === item.id;
               return (
                 <a

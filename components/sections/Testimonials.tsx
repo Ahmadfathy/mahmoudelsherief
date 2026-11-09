@@ -54,7 +54,7 @@ export function Testimonials() {
   return (
     <section id="testimonials" aria-labelledby="testimonials-heading" className="relative overflow-hidden bg-[var(--color-subtle)] py-24 md:py-32">
       <div className="relative mx-auto max-w-7xl px-5 md:px-8">
-        <div aria-hidden className="section-number pointer-events-none absolute -start-2 -top-12 select-none text-[10rem] leading-none md:-start-4 md:-top-20 md:text-[14rem]">05</div>
+        <div aria-hidden className="section-number pointer-events-none absolute -start-2 -top-12 select-none text-[10rem] leading-none md:-start-4 md:-top-20 md:text-[14rem]">06</div>
         <div className="relative mb-12 max-w-3xl md:mb-16">
           <Reveal><div className="mb-5 flex items-center gap-3 text-sm font-medium uppercase tracking-[0.2em] text-[var(--color-muted)]"><span className="h-px w-8 bg-[var(--color-fg)]" /><span>{testimonialsContent.eyebrow}</span></div></Reveal>
           <Reveal delay={0.05}><h2 id="testimonials-heading" className="text-display-md mb-6 text-[var(--color-fg)]">{testimonialsContent.title.before} <span className="marker-yellow">{testimonialsContent.title.highlight}</span> {testimonialsContent.title.after}</h2></Reveal>

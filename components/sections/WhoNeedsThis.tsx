@@ -32,7 +32,7 @@ export function WhoNeedsThis() {
           aria-hidden
           className="section-number text-[10rem] md:text-[14rem] absolute -top-12 md:-top-20 -end-2 md:-end-4 select-none pointer-events-none leading-none"
         >
-          04
+          03
         </div>
 
         {/* Heading */}

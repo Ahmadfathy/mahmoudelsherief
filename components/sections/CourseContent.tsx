@@ -29,7 +29,7 @@ export function CourseContent() {
           aria-hidden
           className="section-number text-[10rem] md:text-[14rem] absolute -top-12 md:-top-20 -start-2 md:-start-4 select-none pointer-events-none leading-none"
         >
-          03
+          04
         </div>
 
         {/* Heading */}

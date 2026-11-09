@@ -8,6 +8,10 @@ import { CourseContent } from "@/components/sections/CourseContent";
 import { WhoNeedsThis } from "@/components/sections/WhoNeedsThis";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { Contact } from "@/components/sections/Contact";
+import { Features } from "@/components/sections/Features";
+import { OfflineCourse } from "@/components/sections/OfflineCourse";
+import { Pricing } from "@/components/sections/Pricing";
+import { FAQ } from "@/components/sections/FAQ";
 
 export default function Home() {
   return (
@@ -16,9 +20,13 @@ export default function Home() {
       <main>
         <Hero />
         <About />
-        <CourseContent />
         <WhoNeedsThis />
+        <CourseContent />
+        <Features />
         <Testimonials />
+        <OfflineCourse />
+        <Pricing />
+        <FAQ />
         <Contact />
       </main>
       <Footer />
