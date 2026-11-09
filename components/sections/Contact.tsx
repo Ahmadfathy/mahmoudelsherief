@@ -39,7 +39,7 @@ export function Contact() {
     <section
       id="contact"
       aria-labelledby="contact-heading"
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-subtle)]"
     >
       {/* Subtle yellow glow */}
       <div
@@ -90,8 +90,8 @@ export function Contact() {
           </Reveal>
         </div>
 
-        {/* Contact buttons — ticket stub style */}
-        <div className="grid md:grid-cols-3 gap-5 md:gap-6 mb-16 max-w-5xl mx-auto">
+        {/* Contact cards */}
+        <div className="grid md:grid-cols-3 gap-5 md:gap-7 mb-16 max-w-5xl mx-auto">
           {contactContent.buttons.map((btn, i) => {
             const Icon = iconMap[btn.icon as keyof typeof iconMap];
             const href = buttonHrefs[btn.type];
@@ -101,17 +101,10 @@ export function Contact() {
                   href={href}
                   target={btn.type !== "phone" ? "_blank" : undefined}
                   rel={btn.type !== "phone" ? "noopener noreferrer" : undefined}
-                  className="group relative block bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[var(--color-primary)] rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1"
+                  className="group relative block h-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-7 transition-all duration-300 hover:border-[var(--color-secondary)]/40 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]"
                 >
-                  {/* Ticket perforation lines (top and bottom edges) */}
-                  <div className="absolute top-3 inset-x-3 h-px border-t border-dashed border-[var(--color-border)] opacity-50" />
-                  <div className="absolute bottom-3 inset-x-3 h-px border-t border-dashed border-[var(--color-border)] opacity-50" />
-
-                  {/* Stub indicator at top */}
-                  <span className="absolute top-0 inset-x-0 mx-auto w-12 h-1 bg-[var(--color-primary)] rounded-b-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
                   <div className="flex items-center gap-4">
-                    <div className="grid place-items-center w-14 h-14 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors duration-300">
+                    <div className="shrink-0 grid place-items-center w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors duration-300">
                       <Icon size={24} strokeWidth={1.75} />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -128,7 +121,7 @@ export function Contact() {
                   </div>
 
                   {/* Action indicator */}
-                  <div className="mt-4 pt-4 border-t border-dashed border-[var(--color-border)] flex items-center justify-between text-xs uppercase tracking-widest text-[var(--color-muted)]">
+                  <div className="mt-5 flex items-center justify-between text-xs uppercase tracking-widest text-[var(--color-muted)]">
                     <span>اضغط للتواصل</span>
                     <ArrowLeft
                       size={14}

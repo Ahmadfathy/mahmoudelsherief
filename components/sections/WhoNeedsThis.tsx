@@ -24,7 +24,7 @@ export function WhoNeedsThis() {
     <section
       id="audience"
       aria-labelledby="audience-heading"
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-bg)]"
     >
       <div className="relative max-w-7xl mx-auto px-5 md:px-8">
         {/* Section number */}
@@ -59,13 +59,13 @@ export function WhoNeedsThis() {
         </div>
 
         {/* Cards grid */}
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid md:grid-cols-2 gap-5 md:gap-7">
           {audienceContent.items.map((item, i) => {
             const Icon = iconMap[item.icon as keyof typeof iconMap];
             return (
               <Reveal key={i} delay={i * 0.05}>
                 <div
-                  className="group relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 md:p-7 hover:border-[var(--color-primary)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+                  className="group relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-7 transition-all duration-300 hover:border-[var(--color-secondary)]/40 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] overflow-hidden"
                 >
                   {/* Index number — top-end corner */}
                   <span
@@ -80,7 +80,7 @@ export function WhoNeedsThis() {
 
                   <div className="flex items-start gap-4">
                     {/* Icon */}
-                    <div className="shrink-0 grid place-items-center w-12 h-12 rounded-xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors duration-300">
+                    <div className="shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors duration-300">
                       <Icon size={22} strokeWidth={1.75} />
                     </div>
 

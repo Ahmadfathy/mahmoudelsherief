@@ -9,7 +9,7 @@ export function Pricing() {
     <section
       id="pricing"
       aria-label={p.eyebrow}
-      className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-b from-[var(--color-bg)] via-[var(--color-secondary)]/[0.03] to-[var(--color-bg)]"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-subtle)] bg-gradient-to-b from-[var(--color-subtle)] via-[var(--color-secondary)]/[0.03] to-[var(--color-subtle)]"
     >
       <div className="relative max-w-7xl mx-auto px-5 md:px-8">
         <div className="mb-12 md:mb-16">

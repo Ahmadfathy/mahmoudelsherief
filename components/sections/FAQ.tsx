@@ -8,7 +8,7 @@ export function FAQ() {
     <section
       id="faq"
       aria-label={faqContent.eyebrow}
-      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-subtle)]"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-bg)]"
     >
       {/* Hide native disclosure marker (Safari) */}
       <style>{`.faq-summary::-webkit-details-marker{display:none}`}</style>
@@ -26,7 +26,7 @@ export function FAQ() {
         <div className="max-w-[800px] mx-auto space-y-3">
           {faqContent.items.map((item, i) => (
             <Reveal key={i} delay={i * 0.04}>
-              <details className="group bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden transition-colors hover:border-[var(--color-fg)]/30 open:border-[var(--color-secondary)]/40">
+              <details className="group bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl overflow-hidden transition-colors hover:border-[var(--color-fg)]/30 open:border-[var(--color-secondary)]/40">
                 <summary className="faq-summary flex items-center justify-between gap-4 p-5 md:p-6 cursor-pointer list-none font-bold text-[var(--color-fg)] text-base md:text-lg">
                   <span>{item.question}</span>
                   <span className="shrink-0 grid place-items-center w-9 h-9 rounded-full bg-[var(--color-subtle)] text-[var(--color-fg)] transition-transform duration-300 group-open:rotate-45 group-open:bg-[var(--color-secondary)] group-open:text-white">

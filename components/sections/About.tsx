@@ -10,7 +10,7 @@ export function About() {
     <section
       id="about"
       aria-labelledby="about-heading"
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-subtle)]"
     >
       {/* Background decoration */}
       <div

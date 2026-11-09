@@ -19,7 +19,7 @@ function InfoRow({
 }) {
   const inner = (
     <div className="flex items-start gap-3">
-      <span className="shrink-0 grid place-items-center w-10 h-10 rounded-xl bg-[var(--color-subtle)] text-[var(--color-secondary)]">
+      <span className="shrink-0 grid place-items-center w-10 h-10 rounded-2xl bg-[var(--color-subtle)] text-[var(--color-secondary)]">
         <Icon size={18} strokeWidth={1.75} />
       </span>
       <div className="min-w-0">
@@ -40,7 +40,7 @@ function InfoRow({
 function Scheduled() {
   const s = o.scheduled;
   return (
-    <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl overflow-hidden">
+    <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden">
       <div className="h-1.5 bg-[var(--color-secondary)]" />
       <div className="p-8 md:p-10">
         {s.seatsRemaining && (
@@ -69,7 +69,7 @@ function Scheduled() {
 function NotScheduled() {
   const n = o.notScheduled;
   return (
-    <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl overflow-hidden">
+    <div className="relative bg-[var(--color-card)] border border-[var(--color-border)] rounded-[32px] overflow-hidden">
       <div className="p-8 md:p-12 text-center">
         <div className="mx-auto grid place-items-center w-16 h-16 rounded-full bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] mb-6">
           <CalendarClock size={28} strokeWidth={1.5} />
@@ -102,7 +102,7 @@ export function OfflineCourse() {
     <section
       id="offline"
       aria-label={o.eyebrow}
-      className="relative py-24 md:py-32 overflow-hidden"
+      className="relative py-24 md:py-32 overflow-hidden bg-[var(--color-bg)]"
     >
       <div className="relative max-w-7xl mx-auto px-5 md:px-8">
         <div className="mb-12 md:mb-16">
