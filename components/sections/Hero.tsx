@@ -42,7 +42,7 @@ export function Hero() {
     >
       <div className="max-w-7xl mx-auto px-5 md:px-8 text-center">
         {/* Eyebrow */}
-        <motion.p
+        {/* <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0, ease: EASE }}
@@ -51,7 +51,7 @@ export function Hero() {
           <span className="h-px w-8 bg-[var(--color-secondary)]" />
           <span>{heroContent.eyebrow}</span>
           <span className="h-px w-8 bg-[var(--color-secondary)]" />
-        </motion.p>
+        </motion.p> */}
 
         {/* Title */}
         <motion.h1
@@ -59,7 +59,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: EASE }}
-          className="text-display-xl text-[var(--color-fg)] max-w-4xl mx-auto mb-5 md:mb-6"
+          className="text-display-md text-[var(--color-fg)] max-w-4xl mx-auto mb-5 md:mb-6"
           style={{ fontFamily: "var(--font-display)" }}
         >
           {heroContent.title}
@@ -70,7 +70,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3, ease: EASE }}
-          className="text-lg md:text-2xl text-[var(--color-muted)] leading-relaxed max-w-[48ch] mx-auto mb-10 md:mb-14"
+          className="text-sm md:text-xl text-[var(--color-muted)] leading-relaxed max-w-[48ch] mx-auto mb-10 md:mb-14"
         >
           {heroContent.subtitle}
         </motion.p>
@@ -125,7 +125,7 @@ export function Hero() {
 
         {/* Scroll indicator */}
         <a
-          href="#about"
+          href="#course"
           className="mt-10 md:mt-14 inline-flex flex-col items-center gap-1 text-sm tracking-[0.2em] text-[var(--color-secondary)]"
         >
           <span>اكتشف الكورس</span>

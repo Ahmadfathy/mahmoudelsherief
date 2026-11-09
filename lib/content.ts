@@ -185,7 +185,7 @@ export const contactContent = {
   buttons: [
     { type: "phone", label: "اتصل بنا", value: "+201012205238", icon: "Phone" },
     { type: "whatsapp", label: "واتساب", value: "ابعت رسالة", icon: "MessageCircle" },
-    { type: "email", label: "البريد الإلكتروني", value: "info@example.com", icon: "Mail" },
+    { type: "email", label: "البريد الإلكتروني", value: "mahmoudsherief6@gmail.com", icon: "Mail" },
   ],
   socialHeading: "تابعنا على السوشيال ميديا",
 };

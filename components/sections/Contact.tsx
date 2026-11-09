@@ -91,7 +91,7 @@ export function Contact() {
         </div>
 
         {/* Contact cards */}
-        <div className="grid md:grid-cols-3 gap-5 md:gap-7 mb-16 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-5 md:gap-7 mb-16 mx-auto">
           {contactContent.buttons.map((btn, i) => {
             const Icon = iconMap[btn.icon as keyof typeof iconMap];
             const href = buttonHrefs[btn.type];
@@ -112,7 +112,7 @@ export function Contact() {
                         {btn.label}
                       </div>
                       <div
-                        className="text-base md:text-lg font-bold text-[var(--color-fg)] truncate"
+                        className="text-base md:text-md font-semibold text-[var(--color-fg)] truncate"
                         style={{ fontFamily: "var(--font-display)" }}
                       >
                         {btn.value}

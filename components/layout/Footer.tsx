@@ -24,7 +24,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 
 export function Footer() {
   return (
-    <footer className="relative border-t border-[var(--color-border)] bg-[var(--color-subtle)] mt-20">
+    <footer className="relative border-t border-[var(--color-border)] bg-[var(--color-subtle)]">
       {/* Decorative dotted divider on top */}
       <div className="absolute top-0 inset-x-0 h-2 dotted-divider opacity-40" />
 
