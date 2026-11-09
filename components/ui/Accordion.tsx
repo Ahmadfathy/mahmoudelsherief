@@ -1,13 +1,20 @@
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, PlayCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
+
+export interface AccordionLesson {
+  title: string;
+  isPreview?: boolean;
+  previewSlug?: string;
+}
 
 interface AccordionItemData {
   number: string;
   title: string;
   duration: string;
-  lessons: string[];
+  lessons: AccordionLesson[];
 }
 
 interface AccordionProps {
@@ -123,18 +130,42 @@ function AccordionItem({
           >
             <div className="px-5 md:px-6 pb-6 pt-0">
               <div className="ps-12 md:ps-16 border-t border-dashed border-[var(--color-border)] pt-5">
-                <ul className="space-y-3">
-                  {item.lessons.map((lesson, idx) => (
-                    <li
-                      key={idx}
-                      className="flex items-start gap-3 text-[var(--color-fg)]"
-                    >
-                      <span className="mt-[0.55rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-secondary)]" />
-                      <span className="text-base md:text-lg leading-relaxed">
-                        {lesson}
-                      </span>
-                    </li>
-                  ))}
+                <ul className="space-y-1">
+                  {item.lessons.map((lesson, idx) => {
+                    const content = (
+                      <div
+                        className={`flex items-center gap-3 py-2 px-2 rounded-md transition-colors ${
+                          lesson.isPreview
+                            ? "border-s-2 border-[var(--color-secondary)] hover:bg-[var(--color-subtle)] cursor-pointer"
+                            : ""
+                        }`}
+                      >
+                        <span className="text-sm text-[var(--color-muted)] tabular shrink-0 w-6">
+                          {String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <span className="flex-1 text-base md:text-lg leading-relaxed text-[var(--color-fg)]">
+                          {lesson.title}
+                        </span>
+                        {lesson.isPreview && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-[var(--color-secondary)] bg-[var(--color-secondary)]/10 px-2 py-1 rounded-full whitespace-nowrap">
+                            <PlayCircle size={12} strokeWidth={2} />
+                            درس مجاني
+                          </span>
+                        )}
+                      </div>
+                    );
+                    return (
+                      <li key={idx}>
+                        {lesson.isPreview && lesson.previewSlug ? (
+                          <Link to={`/academy/${lesson.previewSlug}`} className="block">
+                            {content}
+                          </Link>
+                        ) : (
+                          content
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
