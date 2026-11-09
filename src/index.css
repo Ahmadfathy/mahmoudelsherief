@@ -4,23 +4,23 @@
    THEME TOKENS — Tailwind v4 CSS-first config
    ============================================================ */
 @theme {
-  /* Brand colors — new palette: premium black + deep gold + warm paper */
-  --color-primary: #1C1917;          /* near-black, warm */
-  --color-primary-light: #292524;    /* slightly lighter for hover/subtle */
-  --color-secondary: #A16207;        /* deep gold — WCAG AA on warm paper (5.12:1) */
-  --color-secondary-warm: #8A530C;   /* darker gold for hover states */
+  /* Brand colors */
+  --color-primary: #5B2D8B;
+  --color-primary-light: #7A47B0;
+  --color-secondary: #FFD84D;
+  --color-secondary-warm: #FFC93C;
 
   /* Light mode */
-  --color-bg: #FAFAF9;               /* warm paper, not stark white */
-  --color-fg: #0C0A09;               /* almost-black */
-  --color-muted: #475569;            /* slate for muted text (7.24:1 contrast) */
-  --color-card: #FFFFFF;             /* pure white for raised cards only */
-  --color-border: #D6D3D1;           /* warm taupe border */
-  --color-subtle: #F5F5F4;           /* warm subtle gray */
+  --color-bg: #F7F7F7;
+  --color-fg: #1A1A1A;
+  --color-muted: #6B6B6B;
+  --color-card: #FFFFFF;
+  --color-border: #E5E5E5;
+  --color-subtle: #EDEDED;
 
-  /* Fonts — new pairing: Arabic naskh serif + Latin serif/sans */
-  --font-sans: 'Noto Sans Arabic', 'Montserrat', system-ui, -apple-system, sans-serif;
-  --font-display: 'Noto Naskh Arabic', 'Cormorant', Georgia, serif;
+  /* Fonts */
+  --font-sans: 'Zain', system-ui, -apple-system, sans-serif;
+  --font-display: 'Alexandria', 'Zain', Georgia, serif;
 
   /* Easing curves — KEEP AS IS */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -32,14 +32,13 @@
    DARK MODE OVERRIDES
    ============================================================ */
 .dark {
-  --color-bg: #0C0A09;               /* warm near-black */
-  --color-fg: #FAFAF9;               /* warm paper */
-  --color-muted: #A09789;            /* warm muted */
-  --color-card: #1C1917;             /* dark card */
-  --color-border: #292524;           /* warm dark border */
-  --color-subtle: #171414;           /* darker subtle */
-  --color-primary: #FAFAF9;          /* in dark mode, primary flips to the paper color */
-  --color-secondary: #D4A446;        /* brighter gold for dark bg contrast (6.82:1) */
+  --color-bg: #121212;
+  --color-fg: #F2F2F2;
+  --color-muted: #A0A0A0;
+  --color-card: #1C1C1C;
+  --color-border: #2A2A2A;
+  --color-subtle: #1F1F1F;
+  --color-primary: #8B5BC4;
 }
 
 /* ============================================================
@@ -133,18 +132,27 @@
   /* === Highlighter marker effect === */
   .marker-yellow {
     background-image: linear-gradient(
-      to top,
-      transparent 0%,
-      transparent 6%,
-      var(--color-secondary) 6%,
-      var(--color-secondary) 12%,
-      transparent 12%,
-      transparent 100%
+      120deg,
+      transparent 4%,
+      var(--color-secondary) 4%,
+      var(--color-secondary) 96%,
+      transparent 96%
     );
     background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-position: 0 0;
-    padding: 0 0.1em;
+    background-size: 100% 65%;
+    background-position: 0 70%;
+    padding: 0 0.15em;
+  }
+
+  .dark .marker-yellow {
+    background-image: linear-gradient(
+      120deg,
+      transparent 4%,
+      var(--color-secondary) 4%,
+      var(--color-secondary) 96%,
+      transparent 96%
+    );
+    color: #1A1A1A;
   }
 
   /* === Outlined display text (for big numbers) === */
