@@ -1,5 +1,5 @@
-
-
+import { Link } from "react-router-dom";
+import { PlayCircle } from "lucide-react";
 import { courseContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
 import { Accordion } from "@/components/ui/Accordion";
@@ -69,6 +69,22 @@ export function CourseContent() {
             items={courseContent.sections}
             defaultOpen={0}
           />
+        </Reveal>
+
+        {/* Free preview CTA */}
+        <Reveal delay={0.2}>
+          <div className="mt-12 md:mt-14 flex flex-col items-center gap-3 text-center">
+            <p className="text-sm text-[var(--color-muted)]">
+              عايز تجرّب قبل ما تشترك؟
+            </p>
+            <Link
+              to="/academy/kors-tsoyr-balmobayl"
+              className="inline-flex items-center gap-3 h-12 md:h-14 px-7 md:px-9 rounded-2xl border-2 border-[var(--color-fg)] text-[var(--color-fg)] font-bold text-base md:text-lg transition-all duration-200 hover:bg-[var(--color-fg)] hover:text-[var(--color-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
+            >
+              <PlayCircle size={20} strokeWidth={2} />
+              معاينة الدروس المجانية
+            </Link>
+          </div>
         </Reveal>
       </div>
     </section>

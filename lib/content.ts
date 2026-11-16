@@ -61,7 +61,7 @@ export const courseContent = {
       title: "أساسيات التصوير بالموبايل",
       duration: "ساعتين",
       lessons: [
-        { title: "تجهيز الموبايل قبل التصوير", isPreview: true, previewSlug: "preview-01" },
+        { title: "تجهيز الموبايل قبل التصوير" },
         { title: "أفضل إعدادات الكاميرا للتصوير الاحترافي" },
         { title: "فهم جودة الفيديو والفريمات والرزليوشن" },
         { title: "عدسة الموبايل وتحسين جودة الصورة" },
@@ -73,7 +73,7 @@ export const courseContent = {
       title: "التصوير الحركي والزوايا",
       duration: "ساعتين",
       lessons: [
-        { title: "التحرك بالموبايل بشكل ثابت واحترافي", isPreview: true, previewSlug: "preview-02" },
+        { title: "التحرك بالموبايل بشكل ثابت واحترافي" },
         { title: "أنواع الحركات السينمائية" },
         { title: "تصوير الـ B-Roll بشكل احترافي" },
         { title: "أفضل الزوايا لتصوير المنتجات والأشخاص" },
@@ -85,7 +85,7 @@ export const courseContent = {
       title: "إتقان الإضاءة",
       duration: "ساعتين",
       lessons: [
-        { title: "فهم الإضاءة الطبيعية والصناعية", isPreview: true, previewSlug: "preview-03" },
+        { title: "فهم الإضاءة الطبيعية والصناعية" },
         { title: "التصوير في ضوء الشمس بشكل صحيح" },
         { title: "توزيع الإضاءة داخل الاستوديو" },
         { title: "التحكم في الظلال والهايلايت" },

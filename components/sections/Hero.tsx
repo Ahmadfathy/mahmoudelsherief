@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Play, Pause, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Play, Pause, ChevronDown, ArrowLeft } from "lucide-react";
 import { heroContent } from "@/lib/content";
+import { Reveal } from "@/components/ui/Reveal";
 import { config } from "@/lib/config";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -123,10 +125,23 @@ export function Hero() {
           </button>
         </motion.div>
 
+        {/* Primary CTA */}
+        <Reveal delay={0.6}>
+          <div className="mt-10 md:mt-12 flex justify-center">
+            <Link
+              to="/payment"
+              className="inline-flex items-center gap-3 h-14 px-10 rounded-2xl bg-[var(--color-fg)] text-[var(--color-bg)] font-bold text-lg transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] shadow-[0_15px_40px_-15px_rgba(44,54,57,0.4)]"
+            >
+              اشترك الآن
+              <ArrowLeft size={20} strokeWidth={2.5} />
+            </Link>
+          </div>
+        </Reveal>
+
         {/* Scroll indicator */}
         <a
           href="#course"
-          className="mt-10 md:mt-14 inline-flex flex-col items-center gap-1 text-sm tracking-[0.2em] text-[var(--color-secondary)]"
+          className="mt-8 md:mt-10 inline-flex flex-col items-center gap-1 text-sm tracking-[0.2em] text-[var(--color-secondary)]"
         >
           <span>اكتشف الكورس</span>
           <motion.span
