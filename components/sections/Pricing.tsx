@@ -25,7 +25,7 @@ export function Pricing() {
         <Reveal>
           <div className="relative mx-auto max-w-[560px]">
             <div className="relative bg-[var(--color-card)] border-2 border-[var(--color-secondary)]/30 rounded-3xl overflow-hidden shadow-[0_20px_60px_-20px_rgba(161,98,7,0.25)]">
-              <div className="bg-[var(--color-secondary)] text-[#1A1A1A] text-center py-3 px-5 text-sm font-bold tracking-wide">
+              <div className="bg-[var(--color-secondary)] text-[var(--color-card)] text-center py-3 px-5 text-sm font-bold tracking-wide">
                 {p.discountBadge}
               </div>
 

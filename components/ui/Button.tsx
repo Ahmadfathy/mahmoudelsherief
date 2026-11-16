@@ -27,7 +27,7 @@ const sizeStyles: Record<ButtonSize, string> = {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[var(--color-secondary)] text-[#1A1A1A] hover:bg-[var(--color-secondary-warm)] shadow-[0_8px_24px_-8px_rgba(255,216,77,0.6)]",
+    "bg-[var(--color-secondary)] text-[var(--color-card)] hover:bg-[var(--color-secondary-warm)] shadow-[0_8px_24px_-8px_color-mix(in_srgb,var(--color-secondary)_60%,transparent)]",
   outline:
     "border-2 border-[var(--color-fg)] text-[var(--color-fg)] hover:bg-[var(--color-fg)] hover:text-[var(--color-bg)]",
   ghost:

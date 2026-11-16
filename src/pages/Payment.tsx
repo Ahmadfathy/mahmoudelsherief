@@ -211,7 +211,7 @@ export default function Payment() {
             افتح التطبيق وامسح الـ QR Code، أو انسخ الرقم وابعت المبلغ يدوياً
           </p>
 
-          <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[#1A1A1A] px-5 py-2 rounded-full">
+          <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[var(--color-card)] px-5 py-2 rounded-full">
             <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>
               {displayedAmount.toLocaleString("ar-EG")}
             </span>

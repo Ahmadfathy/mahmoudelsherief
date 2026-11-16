@@ -112,7 +112,7 @@ export function Hero() {
                   className="absolute inset-0 rounded-full bg-[var(--color-secondary)] animate-ping opacity-30"
                 />
               )}
-              <span className="relative grid place-items-center w-20 h-20 rounded-full bg-[var(--color-secondary)] text-[#1A1A1A] shadow-2xl group-hover:scale-110 transition-transform duration-300">
+              <span className="relative grid place-items-center w-20 h-20 rounded-full bg-[var(--color-secondary)] text-[var(--color-card)] shadow-2xl group-hover:scale-110 transition-transform duration-300">
                 {isPlaying ? (
                   <Pause size={26} strokeWidth={2} fill="currentColor" />
                 ) : (

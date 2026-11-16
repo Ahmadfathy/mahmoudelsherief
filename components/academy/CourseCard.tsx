@@ -36,7 +36,7 @@ export function CourseCard({ course, index = 0 }: { course: Course; index?: numb
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 grid place-items-center">
             {locked ? (
               <span className="opacity-0 group-hover:opacity-100 transition-opacity grid place-items-center w-12 h-12 rounded-full bg-white/90">
-                <Lock size={20} className="text-[#1A1A1A]" />
+                <Lock size={20} className="text-[#2C3639]" />
               </span>
             ) : (
               <span className="opacity-0 group-hover:opacity-100 transition-opacity grid place-items-center w-12 h-12 rounded-full bg-white/90">

@@ -4,25 +4,25 @@
    THEME TOKENS — Tailwind v4 CSS-first config
    ============================================================ */
 @theme {
-  /* Brand colors */
-  --color-primary: #5B2D8B;
-  --color-primary-light: #7A47B0;
-  --color-secondary: #FFD84D;
-  --color-secondary-warm: #FFC93C;
+  /* Brand colors — Terra palette: warm earth tones */
+  --color-primary: #2C3639;          /* deep slate-charcoal, warm */
+  --color-primary-light: #3F4A4E;    /* slightly lighter for hover/subtle */
+  --color-secondary: #C47137;        /* terracotta/rust warm accent */
+  --color-secondary-warm: #A85D28;   /* deeper terracotta for hover */
 
-  /* Light mode */
-  --color-bg: #F7F7F7;
-  --color-fg: #1A1A1A;
-  --color-muted: #6B6B6B;
-  --color-card: #FFFFFF;
-  --color-border: #E5E5E5;
-  --color-subtle: #EDEDED;
+  /* Light mode — bone cream base */
+  --color-bg: #F1EBE1;               /* bone/sand warm cream */
+  --color-fg: #2C3639;               /* deep slate */
+  --color-muted: #6B655C;            /* warm stone */
+  --color-card: #FBF8F2;             /* softer cream for raised cards */
+  --color-border: #DBD4C6;           /* sand taupe */
+  --color-subtle: #E8E0D2;           /* subtle sand tint, deeper than bg */
 
-  /* Fonts */
+  /* Fonts — UNCHANGED */
   --font-sans: 'Zain', system-ui, -apple-system, sans-serif;
   --font-display: 'Alexandria', 'Zain', Georgia, serif;
 
-  /* Easing curves — KEEP AS IS */
+  /* Easing curves — UNCHANGED */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
@@ -32,13 +32,14 @@
    DARK MODE OVERRIDES
    ============================================================ */
 .dark {
-  --color-bg: #121212;
-  --color-fg: #F2F2F2;
-  --color-muted: #A0A0A0;
-  --color-card: #1C1C1C;
-  --color-border: #2A2A2A;
-  --color-subtle: #1F1F1F;
-  --color-primary: #8B5BC4;
+  --color-bg: #1C1A17;               /* warm dark brown-black */
+  --color-fg: #F1EBE1;               /* bone cream flipped */
+  --color-muted: #9A8F7F;            /* warm muted stone */
+  --color-card: #2A2622;             /* dark card, warm */
+  --color-border: #3A332C;           /* warm dark border */
+  --color-subtle: #221F1B;           /* deeper subtle */
+  --color-primary: #E8DFD0;          /* flipped primary for dark mode */
+  --color-secondary: #E39A68;        /* lighter terracotta for dark contrast */
 }
 
 /* ============================================================
@@ -83,7 +84,7 @@
   /* Selection */
   ::selection {
     background: var(--color-secondary);
-    color: #1A1A1A;
+    color: var(--color-card);
   }
 
   /* Focus visible */
@@ -152,7 +153,6 @@
       var(--color-secondary) 96%,
       transparent 96%
     );
-    color: #1A1A1A;
   }
 
   /* === Outlined display text (for big numbers) === */
