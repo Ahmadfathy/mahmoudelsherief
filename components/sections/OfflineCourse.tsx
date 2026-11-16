@@ -1,5 +1,4 @@
-import type { LucideIcon } from "lucide-react";
-import { Camera, Users, HandMetal, MessageCircle, Calendar, Clock, MapPin, Tag } from "lucide-react";
+import { MessageCircle, Calendar, Clock, MapPin, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { offlineCourseContent } from "@/lib/content";
 import { config } from "@/lib/config";
@@ -7,12 +6,15 @@ import { Reveal } from "@/components/ui/Reveal";
 
 const { isScheduled, scheduled, notScheduled } = offlineCourseContent;
 
-type PillTileProps = { icon: LucideIcon; title: string; description: string };
-
-const experienceTiles: PillTileProps[] = [
-  { icon: Camera, title: "تصوير ميداني", description: "جلسات تصوير حقيقية في مواقع مختارة حول القاهرة." },
-  { icon: Users, title: "نقاش جماعي", description: "مراجعة شغل كل طالب ومناقشة مع المجموعة لحظة بلحظة." },
-  { icon: HandMetal, title: "تطبيق مباشر", description: "تمارين عملية وفيدباك فوري من محمود على شغلك." },
+// Bento gallery on a 6-col grid: big left (3×4), wide top-right (3×2),
+// two small cells under it (2×2 + 1×2), full-width stripe at the bottom (6×2).
+// Placeholder photos — swap src for real workshop photos; keep the spans.
+const bentoImages = [
+  { src: "https://picsum.photos/seed/sherief-offline-1/800/600", span: "col-span-3 row-span-4" },
+  { src: "https://picsum.photos/seed/sherief-offline-2/800/400", span: "col-span-3 row-span-2" },
+  { src: "https://picsum.photos/seed/sherief-offline-3/600/400", span: "col-span-2 row-span-2" },
+  { src: "https://picsum.photos/seed/sherief-offline-4/400/400", span: "col-span-1 row-span-2" },
+  { src: "https://picsum.photos/seed/sherief-offline-5/1200/400", span: "col-span-6 row-span-2" },
 ];
 
 const ctaClass =
@@ -26,25 +28,6 @@ const glows = `
   radial-gradient(ellipse 45% 35% at 0% 100%, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, transparent 70%),
   radial-gradient(ellipse 35% 30% at 85% 100%, color-mix(in srgb, var(--color-secondary) 10%, transparent) 0%, transparent 75%)
 `;
-
-function PillTile({ icon: Icon, title, description }: PillTileProps) {
-  return (
-    <div className="flex items-center gap-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-[32px] p-3 md:p-4 pe-6 md:pe-8 transition-all duration-300 hover:border-[var(--color-secondary)]/50 hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-10px_rgba(196,113,55,0.25)]">
-      <div className="shrink-0 grid place-items-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--color-secondary)_20%,transparent)] to-[color-mix(in_srgb,var(--color-secondary)_8%,transparent)] text-[var(--color-secondary)]">
-        <Icon size={24} strokeWidth={1.75} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3
-          className="text-base md:text-lg font-bold text-[var(--color-fg)] mb-0.5"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {title}
-        </h3>
-        <p className="text-sm text-[var(--color-muted)] leading-relaxed">{description}</p>
-      </div>
-    </div>
-  );
-}
 
 function WaitlistBlock() {
   return (
@@ -161,11 +144,18 @@ export function OfflineCourse() {
             <Reveal delay={0.16}>{isScheduled ? <ScheduledBlock /> : <WaitlistBlock />}</Reveal>
           </div>
 
-          {/* End column — pill tiles */}
-          <div className="flex flex-col gap-3 md:gap-4">
-            {experienceTiles.map((tile, i) => (
-              <Reveal key={i} delay={0.2 + i * 0.08}>
-                <PillTile {...tile} />
+          {/* End column — bento gallery (Reveal is the grid item, so it carries the span) */}
+          <div className="grid grid-cols-6 auto-rows-[90px] md:auto-rows-[110px] gap-3 md:gap-4" dir="ltr">
+            {bentoImages.map((img, i) => (
+              <Reveal key={i} delay={0.2 + i * 0.07} className={img.span}>
+                <div className="group h-full overflow-hidden rounded-2xl md:rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_8px_24px_-12px_rgba(44,54,57,0.15)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_15px_35px_-15px_rgba(44,54,57,0.3)]">
+                  <img
+                    src={img.src}
+                    alt="من ورشة التصوير"
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
               </Reveal>
             ))}
           </div>
