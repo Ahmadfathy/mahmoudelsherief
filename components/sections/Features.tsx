@@ -1,3 +1,4 @@
+import { motion, useReducedMotion, type TargetAndTransition } from "framer-motion";
 import { Download, Infinity, RefreshCw, MessageSquare, Calendar } from "lucide-react";
 import { featuresContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
@@ -5,7 +6,18 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 
 const iconMap = { Download, Infinity, RefreshCw, MessageSquare, Calendar };
 
+// Per-icon hover personality — triggered by hovering anywhere on the card
+const iconHover: Record<string, TargetAndTransition> = {
+  Download: { y: [0, 3, 0], transition: { duration: 0.4, ease: "easeInOut" } },
+  Infinity: { rotate: [0, 180, 360], transition: { duration: 0.8, ease: "easeInOut" } },
+  RefreshCw: { rotate: 360, transition: { duration: 0.6, ease: "easeInOut" } },
+  MessageSquare: { scale: [1, 1.1, 1], rotate: [0, -5, 5, 0], transition: { duration: 0.5, ease: "easeInOut" } },
+  Calendar: { rotate: [0, -3, 3, 0], transition: { duration: 0.4, ease: "easeInOut" } },
+};
+
 export function Features() {
+  const reduceMotion = useReducedMotion();
+
   return (
     <section
       id="features"
@@ -33,9 +45,27 @@ export function Features() {
             const last = i === featuresContent.items.length - 1 ? "md:col-span-2" : "";
             return (
               <Reveal key={i} delay={i * 0.06} className={`${span} ${last}`}>
-                <div className="h-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-7 transition-all duration-300 hover:border-[var(--color-secondary)]/40 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]">
+                <motion.div
+                  whileHover="hover"
+                  className="h-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-7 transition-all duration-300 hover:border-[var(--color-secondary)]/40 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]"
+                >
                   <div className="w-12 h-12 rounded-full bg-[var(--color-secondary)]/10 text-[var(--color-secondary)] grid place-items-center">
-                    <Icon size={22} strokeWidth={1.75} />
+                    <motion.span
+                      className="inline-flex"
+                      variants={reduceMotion ? undefined : { hover: iconHover[item.icon] }}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileInView={{
+                        scale: 1,
+                        opacity: 1,
+                        rotate: 0,
+                        y: 0,
+                        // rotate snaps back (360° ≡ 0°) so spins don't unwind on mouse-leave
+                        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], rotate: { duration: 0 } },
+                      }}
+                      viewport={{ once: true, margin: "-50px" }}
+                    >
+                      {Icon && <Icon size={22} strokeWidth={1.75} />}
+                    </motion.span>
                   </div>
                   <h3
                     className="text-xl font-bold mt-5 mb-2"
@@ -46,7 +76,7 @@ export function Features() {
                   <p className="text-[var(--color-muted)] leading-relaxed">
                     {item.description}
                   </p>
-                </div>
+                </motion.div>
               </Reveal>
             );
           })}

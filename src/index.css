@@ -403,3 +403,48 @@
 [dir="rtl"] .flip-rtl {
   transform: scaleX(-1);
 }
+
+/* ============================================================
+   PLYR VIDEO PLAYER — Terra palette theme
+   ============================================================ */
+.plyr {
+  --plyr-color-main: var(--color-secondary);
+  --plyr-video-control-color: #ffffff;
+  --plyr-video-control-color-hover: var(--color-secondary);
+  --plyr-video-control-background-hover: rgba(255, 255, 255, 0.1);
+  --plyr-audio-control-color: var(--color-fg);
+  --plyr-audio-control-background-hover: var(--color-subtle);
+  --plyr-range-fill-background: var(--color-secondary);
+  --plyr-range-thumb-background: var(--color-secondary);
+  --plyr-video-progress-buffered-background: rgba(255, 255, 255, 0.25);
+  --plyr-menu-background: var(--color-card);
+  --plyr-menu-color: var(--color-fg);
+  --plyr-tooltip-background: var(--color-fg);
+  --plyr-tooltip-color: var(--color-bg);
+  --plyr-font-family: var(--font-sans);
+  --plyr-font-size-small: 0.875rem;
+  --plyr-font-size-base: 1rem;
+  border-radius: inherit;
+  height: 100%;
+}
+
+/* Center the big play button and make it Terra-themed */
+.plyr__control--overlaid {
+  background: var(--color-secondary);
+  color: #ffffff;
+  padding: 1.25rem;
+  box-shadow: 0 10px 40px -10px rgba(196, 113, 55, 0.6);
+}
+
+.plyr__control--overlaid:hover,
+.plyr__control--overlaid:focus {
+  background: var(--color-secondary-warm) !important;
+}
+
+/* Ensure Plyr respects the container's rounded corners */
+.plyr--video {
+  border-radius: inherit;
+}
+.plyr__video-wrapper {
+  border-radius: inherit;
+}

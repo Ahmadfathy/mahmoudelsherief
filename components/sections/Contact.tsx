@@ -1,4 +1,5 @@
 
+import { motion, useReducedMotion, type TargetAndTransition } from "framer-motion";
 import { Phone, MessageCircle, Mail, Facebook, Instagram, ArrowLeft } from "lucide-react";
 import { contactContent } from "@/lib/content";
 import { config } from "@/lib/config";
@@ -8,6 +9,13 @@ const iconMap = {
   Phone,
   MessageCircle,
   Mail,
+};
+
+// Per-icon hover personality — triggered by hovering/focusing anywhere on the card
+const iconHover: Record<string, TargetAndTransition> = {
+  Phone: { rotate: [0, -15, 15, -10, 10, 0], transition: { duration: 0.6, ease: "easeInOut" } },
+  MessageCircle: { scale: [1, 1.2, 1], transition: { duration: 0.4, ease: "easeInOut" } },
+  Mail: { y: [0, -3, 0], rotate: [0, -5, 0], transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -29,6 +37,7 @@ function TikTokIcon({ size = 18 }: { size?: number }) {
 }
 
 export function Contact() {
+  const reduceMotion = useReducedMotion();
   const buttonHrefs: Record<string, string> = {
     phone: config.tel,
     whatsapp: config.whatsappContact,
@@ -97,15 +106,31 @@ export function Contact() {
             const href = buttonHrefs[btn.type];
             return (
               <Reveal key={i} delay={i * 0.08}>
-                <a
+                <motion.a
                   href={href}
                   target={btn.type !== "phone" ? "_blank" : undefined}
                   rel={btn.type !== "phone" ? "noopener noreferrer" : undefined}
+                  whileHover="hover"
+                  whileFocus="hover"
                   className="group relative block h-full bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-7 transition-all duration-300 hover:border-[var(--color-secondary)]/40 hover:-translate-y-1 hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)]"
                 >
                   <div className="flex items-center gap-4">
                     <div className="shrink-0 grid place-items-center w-14 h-14 rounded-2xl bg-[var(--color-primary)]/10 text-[var(--color-primary)] group-hover:bg-[var(--color-primary)] group-hover:text-white transition-colors duration-300">
-                      <Icon size={24} strokeWidth={1.75} />
+                      <motion.span
+                        className="inline-flex"
+                        variants={reduceMotion ? undefined : { hover: iconHover[btn.icon] }}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        whileInView={{
+                          scale: 1,
+                          opacity: 1,
+                          rotate: 0,
+                          y: 0,
+                          transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], rotate: { duration: 0 } },
+                        }}
+                        viewport={{ once: true, margin: "-50px" }}
+                      >
+                        {Icon && <Icon size={24} strokeWidth={1.75} />}
+                      </motion.span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs uppercase tracking-widest text-[var(--color-muted)] mb-1">
@@ -129,7 +154,7 @@ export function Contact() {
                       className="text-[var(--color-primary)] group-hover:-translate-x-1 transition-transform duration-300"
                     />
                   </div>
-                </a>
+                </motion.a>
               </Reveal>
             );
           })}

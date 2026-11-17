@@ -1,40 +1,51 @@
-import { useState, useRef, useEffect } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { Play, Pause, ChevronDown, ArrowLeft } from "lucide-react";
+import { ChevronDown, ArrowLeft } from "lucide-react";
+import Plyr, { type APITypes, type PlyrProps } from "plyr-react";
+import "plyr-react/plyr.css";
 import { heroContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
 import { config } from "@/lib/config";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
+// Module-scope so Plyr doesn't re-initialise on every render
+const PLYR_SOURCE: PlyrProps["source"] = {
+  type: "video",
+  poster: config.heroPoster,
+  sources: [{ src: config.heroVideo, type: "video/mp4" }],
+};
+
+const PLYR_OPTIONS: PlyrProps["options"] = {
+  controls: [
+    "play-large",
+    "play",
+    "progress",
+    "current-time",
+    "duration",
+    "mute",
+    "volume",
+    "captions",
+    "settings",
+    "pip",
+    "airplay",
+    "fullscreen",
+  ],
+  settings: ["captions", "quality", "speed"],
+  speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] },
+  autoplay: false,
+  loop: { active: false },
+  muted: false,
+  hideControls: true,
+  ratio: "16:9",
+  keyboard: { focused: true, global: false },
+  tooltips: { controls: true, seek: true },
+  invertTime: false,
+};
+
 export function Hero() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    v.addEventListener("play", onPlay);
-    v.addEventListener("pause", onPause);
-    return () => {
-      v.removeEventListener("play", onPlay);
-      v.removeEventListener("pause", onPause);
-    };
-  }, []);
-
-  function handleVideoToggle() {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      v.muted = false;
-      v.play();
-    } else {
-      v.pause();
-    }
-  }
+  const videoRef = useRef<APITypes>(null);
 
   return (
     <section
@@ -77,52 +88,15 @@ export function Hero() {
           {heroContent.subtitle}
         </motion.p>
 
-        {/* Contained video */}
+        {/* Plyr video player */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.45, ease: EASE }}
-          className="relative max-w-5xl mx-auto aspect-video rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/15 border border-[var(--color-border)] bg-black"
+          dir="ltr"
+          className="relative max-w-5xl mx-auto aspect-video rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl shadow-black/15 border border-[var(--color-border)] bg-black text-start"
         >
-          <video
-            ref={videoRef}
-            src={config.heroVideo}
-            poster={config.heroPoster}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-
-          {/* Center play / pause toggle */}
-          <button
-            type="button"
-            onClick={handleVideoToggle}
-            aria-label={isPlaying ? "إيقاف الفيديو" : "تشغيل الفيديو"}
-            className="absolute inset-0 grid place-items-center group z-10"
-          >
-            <span
-              className={`relative grid place-items-center w-20 h-20 transition-opacity duration-300 ${
-                isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
-              }`}
-            >
-              {!isPlaying && (
-                <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full bg-[var(--color-secondary)] animate-ping opacity-30"
-                />
-              )}
-              <span className="relative grid place-items-center w-20 h-20 rounded-full bg-[var(--color-secondary)] text-[var(--color-card)] shadow-2xl group-hover:scale-110 transition-transform duration-300">
-                {isPlaying ? (
-                  <Pause size={26} strokeWidth={2} fill="currentColor" />
-                ) : (
-                  <Play size={28} strokeWidth={2} fill="currentColor" className="ms-1" />
-                )}
-              </span>
-            </span>
-          </button>
+          <Plyr ref={videoRef} source={PLYR_SOURCE} options={PLYR_OPTIONS} />
         </motion.div>
 
         {/* Primary CTA */}

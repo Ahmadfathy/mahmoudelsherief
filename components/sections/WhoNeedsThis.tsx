@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  type TargetAndTransition,
+} from "framer-motion";
 import {
   Smartphone,
   Camera,
@@ -18,6 +23,16 @@ const iconMap = {
   Briefcase,
   Heart,
   TrendingUp,
+};
+
+// Per-icon hover personality — triggered by hovering/focusing anywhere on the box
+const iconHover: Record<string, TargetAndTransition> = {
+  Camera: { rotate: [0, -8, 8, 0], transition: { duration: 0.4, ease: "easeInOut" } },
+  Smartphone: { rotate: [0, 10, -5, 0], scale: 1.05, transition: { duration: 0.5, ease: "easeInOut" } },
+  Instagram: { scale: [1, 1.15, 1], rotate: [0, 8, 0], transition: { duration: 0.5, ease: "easeInOut" } },
+  Briefcase: { y: [0, -3, 0], transition: { duration: 0.3, ease: "easeInOut" } },
+  Heart: { scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
+  TrendingUp: { y: [0, -4, 0], scale: [1, 1.08, 1], transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
 /**
@@ -54,6 +69,7 @@ const personaImages = {
 
 export function WhoNeedsThis() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const reduceMotion = useReducedMotion();
 
   const currentImageSrc =
     hoveredIndex === null
@@ -115,8 +131,10 @@ export function WhoNeedsThis() {
               const isActive = hoveredIndex === i;
               return (
                 <Reveal key={i} delay={i * 0.05}>
-                  <button
+                  <motion.button
                     type="button"
+                    whileHover="hover"
+                    whileFocus="hover"
                     onMouseEnter={() => setHoveredIndex(i)}
                     onMouseLeave={() => setHoveredIndex(null)}
                     onFocus={() => setHoveredIndex(i)}
@@ -147,7 +165,21 @@ export function WhoNeedsThis() {
                           : "bg-[var(--color-subtle)] text-[var(--color-fg)]"
                       }`}
                     >
-                      {Icon && <Icon size={20} strokeWidth={1.75} />}
+                      <motion.span
+                        className="inline-flex"
+                        variants={reduceMotion ? undefined : { hover: iconHover[item.icon] }}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        whileInView={{
+                          scale: 1,
+                          opacity: 1,
+                          rotate: 0,
+                          y: 0,
+                          transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1], rotate: { duration: 0 } },
+                        }}
+                        viewport={{ once: true, margin: "-50px" }}
+                      >
+                        {Icon && <Icon size={20} strokeWidth={1.75} />}
+                      </motion.span>
                     </span>
 
                     {/* Text */}
@@ -162,7 +194,7 @@ export function WhoNeedsThis() {
                         {item.description}
                       </span>
                     </span>
-                  </button>
+                  </motion.button>
                 </Reveal>
               );
             })}
