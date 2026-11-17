@@ -40,7 +40,7 @@ export function Features() {
             const Icon = iconMap[item.icon as keyof typeof iconMap];
             const span =
               i < 3
-                ? "lg:col-span-2"
+                ? "lg:col-span-3"
                 : "lg:col-span-3";
             const last = i === featuresContent.items.length - 1 ? "md:col-span-2" : "";
             return (
