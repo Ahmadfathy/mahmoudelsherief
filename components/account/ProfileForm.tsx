@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, KeyRound, Save, UserRound } from "lucide-react";
-import { EgyptPhoneInput, normalizeEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PhoneInput, normalizePhoneInput, phoneForSubmit, detectCountry } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
 import { apiRequest, friendlyApiError } from "@/lib/api";
 
@@ -22,7 +22,8 @@ type ProfileFormProps = {
 export function ProfileForm({ token, user, onUpdated }: ProfileFormProps) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
-  const [phone, setPhone] = useState(normalizeEgyptPhoneInput(user.phone ?? ""));
+  const [country, setCountry] = useState(() => detectCountry(user.phone));
+  const [phone, setPhone] = useState(() => normalizePhoneInput(user.phone ?? "", detectCountry(user.phone)));
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -36,7 +37,9 @@ export function ProfileForm({ token, user, onUpdated }: ProfileFormProps) {
   useEffect(() => {
     setName(user.name);
     setEmail(user.email);
-    setPhone(normalizeEgyptPhoneInput(user.phone ?? ""));
+    const storedCountry = detectCountry(user.phone);
+    setCountry(storedCountry);
+    setPhone(normalizePhoneInput(user.phone ?? "", storedCountry));
   }, [user.id, user.name, user.email, user.phone]);
 
   async function saveProfile(event: React.FormEvent) {
@@ -48,7 +51,7 @@ export function ProfileForm({ token, user, onUpdated }: ProfileFormProps) {
       const response = await apiRequest<{ message: string; user: ProfileUser }>("/profile", {
         method: "PATCH",
         token,
-        body: JSON.stringify({ name, email, phone }),
+        body: JSON.stringify({ name, email, phone: phoneForSubmit(phone, country) }),
       });
       setProfileMessage(response.message);
       onUpdated?.(response.user);
@@ -106,7 +109,7 @@ export function ProfileForm({ token, user, onUpdated }: ProfileFormProps) {
         <div className="space-y-5">
           <label className="block"><span className="mb-2 block font-bold">الاسم</span><input value={name} onChange={(event) => setName(event.target.value)} required maxLength={255} autoComplete="name" className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 outline-none focus:ring-2 focus:ring-[var(--color-primary)]" /></label>
           <label className="block"><span className="mb-2 block font-bold">البريد الإلكتروني</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" dir="ltr" className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 text-left outline-none focus:ring-2 focus:ring-[var(--color-primary)]" /></label>
-          <label className="block"><span className="mb-2 block font-bold">رقم الموبايل</span><EgyptPhoneInput value={phone} onChange={setPhone} inputBackgroundClassName="bg-[var(--color-bg)]" /></label>
+          <label className="block"><span className="mb-2 block font-bold">رقم الموبايل</span><PhoneInput value={phone} onChange={setPhone} country={country} onCountryChange={setCountry} inputBackgroundClassName="bg-[var(--color-bg)]" /></label>
           {message(profileError, true)}
           {message(profileMessage)}
           <button type="submit" disabled={savingProfile} className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"><Save size={18} />{savingProfile ? "جاري الحفظ..." : "حفظ التعديلات"}</button>

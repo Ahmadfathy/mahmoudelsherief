@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { config } from "@/lib/config";
-import { formatEgyptPhone } from "@/components/academy/EgyptPhoneInput";
+import { formatPhone, detectCountry } from "@/components/academy/PhoneInput";
 
 export function AcademyHeader() {
   const { user, logout } = useAuth();
@@ -84,8 +84,8 @@ export function AcademyHeader() {
                   <div className="px-4 py-3 border-b border-[var(--color-border)]">
                     <p className="font-bold text-sm truncate">{user.name}</p>
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-[var(--color-muted)]" dir="ltr">
-                      <span aria-hidden="true">🇪🇬</span>
-                      <span>{formatEgyptPhone(user.phone)}</span>
+                      <span aria-hidden="true">{detectCountry(user.phone).flag}</span>
+                      <span>{formatPhone(user.phone, detectCountry(user.phone))}</span>
                     </p>
                   </div>
                   <Link

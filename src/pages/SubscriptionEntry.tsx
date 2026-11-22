@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Camera, LogIn, UserPlus } from "lucide-react";
-import { EgyptPhoneInput, isValidEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PhoneInput, isValidPhoneInput, phoneForSubmit, DEFAULT_COUNTRY } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
 import { config } from "@/lib/config";
 import { useAuth, type LoginResult } from "@/lib/auth-context";
@@ -23,10 +23,12 @@ export default function SubscriptionEntry() {
   const { user, login, register } = useAuth();
   const [tab, setTab] = useState<Tab>("register");
   const [loginPhone, setLoginPhone] = useState("");
+  const [loginCountry, setLoginCountry] = useState(DEFAULT_COUNTRY);
   const [loginPassword, setLoginPassword] = useState("");
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPhone, setRegisterPhone] = useState("");
+  const [registerCountry, setRegisterCountry] = useState(DEFAULT_COUNTRY);
   const [registerPassword, setRegisterPassword] = useState("");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<RegisterField | null>(null);
@@ -44,12 +46,12 @@ export default function SubscriptionEntry() {
 
     if (!registerName.trim()) return showValidationError("name", "من فضلك اكتب الاسم.");
     if (!/^\S+@\S+\.\S+$/.test(registerEmail.trim())) return showValidationError("email", "من فضلك اكتب بريدًا إلكترونيًا صحيحًا.");
-    if (!isValidEgyptPhoneInput(registerPhone)) return showValidationError("phone", "رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+    if (!isValidPhoneInput(registerPhone, registerCountry)) return showValidationError("phone", "رقم الموبايل غير صحيح. تأكد من كود الدولة وعدد الأرقام.");
     if (registerPassword.length < 8) return showValidationError("password", "كلمة السر يجب ألا تقل عن 8 حروف أو أرقام.");
 
     setSubmitting(true);
     try {
-      await register({ name: registerName.trim(), email: registerEmail.trim(), phone: registerPhone, password: registerPassword });
+      await register({ name: registerName.trim(), email: registerEmail.trim(), phone: phoneForSubmit(registerPhone, registerCountry), password: registerPassword });
       navigate("/dashboard", { replace: true });
     } catch (requestError) {
       setError(friendlyApiError(requestError));
@@ -65,12 +67,12 @@ export default function SubscriptionEntry() {
   async function handleLogin(event: React.FormEvent) {
     event.preventDefault();
     setError("");
-    if (!isValidEgyptPhoneInput(loginPhone)) {
-      setError("رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+    if (!isValidPhoneInput(loginPhone, loginCountry)) {
+      setError("رقم الموبايل غير صحيح. تأكد من كود الدولة وعدد الأرقام.");
       return;
     }
     setSubmitting(true);
-    const result = await login(loginPhone, loginPassword);
+    const result = await login(phoneForSubmit(loginPhone, loginCountry), loginPassword);
     setSubmitting(false);
 
     if (result === "ok") {
@@ -139,7 +141,7 @@ export default function SubscriptionEntry() {
             <form onSubmit={handleRegister} noValidate className="space-y-4">
               <div><label className="mb-1.5 block text-sm font-bold">الاسم</label><input type="text" value={registerName} onChange={(event) => { setRegisterName(event.target.value); if (errorField === "name") { setError(""); setErrorField(null); } }} autoComplete="name" aria-invalid={errorField === "name"} className={`h-12 w-full rounded-xl border bg-[var(--color-bg)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "name" ? "border-red-400 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
               <div><label className="mb-1.5 block text-sm font-bold">الإيميل</label><input type="email" value={registerEmail} onChange={(event) => { setRegisterEmail(event.target.value); if (errorField === "email") { setError(""); setErrorField(null); } }} autoComplete="email" aria-invalid={errorField === "email"} className={`h-12 w-full rounded-xl border bg-[var(--color-bg)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "email" ? "border-red-400 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
-              <div><label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label><EgyptPhoneInput value={registerPhone} onChange={(value) => { setRegisterPhone(value); if (errorField === "phone") { setError(""); setErrorField(null); } }} invalid={errorField === "phone"} inputBackgroundClassName="bg-[var(--color-bg)]" /><p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p></div>
+              <div><label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label><PhoneInput value={registerPhone} onChange={(value) => { setRegisterPhone(value); if (errorField === "phone") { setError(""); setErrorField(null); } }} country={registerCountry} onCountryChange={setRegisterCountry} invalid={errorField === "phone"} inputBackgroundClassName="bg-[var(--color-bg)]" /><p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p></div>
               <div><label className="mb-1.5 block text-sm font-bold">كلمة السر</label><PasswordInput value={registerPassword} onChange={(value) => { setRegisterPassword(value); if (errorField === "password") { setError(""); setErrorField(null); } }} autoComplete="new-password" minLength={8} invalid={errorField === "password"} className={`h-12 w-full rounded-xl border bg-[var(--color-bg)] px-4 transition-colors ${errorField === "password" ? "border-red-400 focus-visible:ring-red-200" : "border-[var(--color-border)]"}`} /><p className="mt-1 text-xs text-[var(--color-muted)]">8 حروف أو أرقام على الأقل</p></div>
               {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"><AlertCircle className="mt-0.5 shrink-0" size={17} /><span>{error}</span></div>}
               <button type="submit" disabled={submitting} className="h-12 w-full rounded-full bg-[var(--color-primary)] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50">{submitting ? "جاري إنشاء الحساب..." : "إنشاء الحساب"}</button>
@@ -148,12 +150,17 @@ export default function SubscriptionEntry() {
             <form onSubmit={handleLogin} noValidate className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label>
-                <EgyptPhoneInput value={loginPhone} onChange={(value) => { setLoginPhone(value); setError(""); }} invalid={Boolean(error) && !isValidEgyptPhoneInput(loginPhone)} inputBackgroundClassName="bg-[var(--color-bg)]" />
+                <PhoneInput value={loginPhone} onChange={(value) => { setLoginPhone(value); setError(""); }} country={loginCountry} onCountryChange={setLoginCountry} invalid={Boolean(error) && !isValidPhoneInput(loginPhone, loginCountry)} inputBackgroundClassName="bg-[var(--color-bg)]" />
                 <p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p>
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-bold">كلمة السر</label>
                 <PasswordInput value={loginPassword} onChange={setLoginPassword} autoComplete="current-password" className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4" />
+                <div className="mt-2 flex justify-end">
+                  <Link to="/forgot-password" className="text-xs font-bold text-[var(--color-primary)] hover:underline">
+                    نسيت كلمة السر؟
+                  </Link>
+                </div>
               </div>
               {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"><AlertCircle className="mt-0.5 shrink-0" size={17} /><span>{error}</span></div>}
               <button type="submit" disabled={submitting} className="h-12 w-full rounded-full bg-[var(--color-primary)] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50">

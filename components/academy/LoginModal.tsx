@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle } from "lucide-react";
-import { EgyptPhoneInput, isValidEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PhoneInput, isValidPhoneInput, phoneForSubmit, DEFAULT_COUNTRY } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
 import { useAuth, type LoginResult } from "@/lib/auth-context";
 
@@ -16,6 +16,7 @@ const LOGIN_ERROR_MESSAGES: Partial<Record<LoginResult, string>> = {
 export function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { login } = useAuth();
   const [phone, setPhone] = useState("");
+  const [loginCountry, setLoginCountry] = useState(DEFAULT_COUNTRY);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,6 +24,7 @@ export function LoginModal({ open, onClose }: { open: boolean; onClose: () => vo
   function close() {
     onClose();
     setPhone("");
+    setLoginCountry(DEFAULT_COUNTRY);
     setPassword("");
     setError("");
   }
@@ -30,12 +32,12 @@ export function LoginModal({ open, onClose }: { open: boolean; onClose: () => vo
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!isValidEgyptPhoneInput(phone)) {
-      setError("رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+    if (!isValidPhoneInput(phone, loginCountry)) {
+      setError("رقم الموبايل غير صحيح. تأكد من كود الدولة وعدد الأرقام.");
       return;
     }
     setSubmitting(true);
-    const result = await login(phone, password);
+    const result = await login(phoneForSubmit(phone, loginCountry), password);
     setSubmitting(false);
     if (result === "ok") {
       close();
@@ -70,10 +72,19 @@ export function LoginModal({ open, onClose }: { open: boolean; onClose: () => vo
             </p>
             <form onSubmit={handleSubmit} noValidate className="space-y-3">
               <div>
-                <EgyptPhoneInput value={phone} onChange={(value) => { setPhone(value); setError(""); }} invalid={Boolean(error) && !isValidEgyptPhoneInput(phone)} autoFocus className="h-11 rounded-lg" inputBackgroundClassName="bg-[var(--color-bg)]" />
+                <PhoneInput value={phone} onChange={(value) => { setPhone(value); setError(""); }} country={loginCountry} onCountryChange={setLoginCountry} invalid={Boolean(error) && !isValidPhoneInput(phone, loginCountry)} autoFocus className="h-11 rounded-lg" inputBackgroundClassName="bg-[var(--color-bg)]" />
                 <p className="mt-1 text-xs text-[var(--color-muted)]">رقم الموبايل بدون الصفر الأول</p>
               </div>
               <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" className="h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-4 text-[var(--color-fg)]" />
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  onClick={close}
+                  className="text-xs font-bold text-[var(--color-primary)] hover:underline"
+                >
+                  نسيت كلمة السر؟
+                </Link>
+              </div>
               {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700"><AlertCircle className="mt-0.5 shrink-0" size={17} /><span>{error}</span></div>}
               <button
                 type="submit"

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
-import { EgyptPhoneInput, isValidEgyptPhoneInput } from "@/components/academy/EgyptPhoneInput";
+import { PhoneInput, isValidPhoneInput, phoneForSubmit, DEFAULT_COUNTRY } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
 import { useAuth } from "@/lib/auth-context";
 import { AlertCircle } from "lucide-react";
@@ -15,6 +15,7 @@ export default function Subscribe() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<RegisterField | null>(null);
@@ -40,8 +41,8 @@ export default function Subscribe() {
       showValidationError("email", "من فضلك اكتب بريدًا إلكترونيًا صحيحًا.");
       return;
     }
-    if (!isValidEgyptPhoneInput(phone)) {
-      showValidationError("phone", "رقم الموبايل غير صحيح. اكتب 10 أرقام بعد كود مصر +20.");
+    if (!isValidPhoneInput(phone, country)) {
+      showValidationError("phone", "رقم الموبايل غير صحيح. تأكد من كود الدولة وعدد الأرقام.");
       return;
     }
     if (password.length < 8) {
@@ -51,7 +52,7 @@ export default function Subscribe() {
 
     setSubmitting(true);
     try {
-      await register({ name, email, phone, password });
+      await register({ name, email, phone: phoneForSubmit(phone, country), password });
       navigate("/dashboard", { replace: true });
     } catch (requestError) {
       setError(friendlyApiError(requestError));
@@ -76,7 +77,7 @@ export default function Subscribe() {
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div><label className="mb-1.5 block text-sm font-bold">الاسم</label><input type="text" value={name} onChange={(event) => { setName(event.target.value); if (errorField === "name") { setError(""); setErrorField(null); } }} required autoComplete="name" aria-invalid={errorField === "name"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "name" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
           <div><label className="mb-1.5 block text-sm font-bold">الإيميل</label><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); if (errorField === "email") { setError(""); setErrorField(null); } }} required autoComplete="email" aria-invalid={errorField === "email"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "email" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
-          <div><label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label><EgyptPhoneInput value={phone} onChange={(value) => { setPhone(value); if (errorField === "phone") { setError(""); setErrorField(null); } }} invalid={errorField === "phone"} /><p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p></div>
+          <div><label className="mb-1.5 block text-sm font-bold">رقم الموبايل</label><PhoneInput value={phone} onChange={(value) => { setPhone(value); if (errorField === "phone") { setError(""); setErrorField(null); } }} country={country} onCountryChange={setCountry} invalid={errorField === "phone"} /><p className="mt-1 text-xs text-[var(--color-muted)]">اكتب الرقم بدون الصفر الأول</p></div>
           <div><label className="mb-1.5 block text-sm font-bold">كلمة السر</label><PasswordInput value={password} onChange={(value) => { setPassword(value); if (errorField === "password") { setError(""); setErrorField(null); } }} autoComplete="new-password" minLength={8} invalid={errorField === "password"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors ${errorField === "password" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)]"}`} /><p className="mt-1 text-xs text-[var(--color-muted)]">8 حروف أو أرقام على الأقل</p></div>
           {error && (
             <div role="alert" className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-red-700 shadow-sm">
