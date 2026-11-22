@@ -10,11 +10,11 @@ const { isScheduled, scheduled, notScheduled } = offlineCourseContent;
 // two small cells under it (2×2 + 1×2), full-width stripe at the bottom (6×2).
 // Placeholder photos — swap src for real workshop photos; keep the spans.
 const bentoImages = [
-  { src: "https://picsum.photos/seed/sherief-offline-1/800/600", span: "col-span-3 row-span-4" },
-  { src: "https://picsum.photos/seed/sherief-offline-2/800/400", span: "col-span-3 row-span-2" },
-  { src: "https://picsum.photos/seed/sherief-offline-3/600/400", span: "col-span-2 row-span-2" },
-  { src: "https://picsum.photos/seed/sherief-offline-4/400/400", span: "col-span-1 row-span-2" },
-  { src: "https://picsum.photos/seed/sherief-offline-5/1200/400", span: "col-span-6 row-span-2" },
+  { src: "/offline/1.jpeg", span: "col-span-3 row-span-4" },
+  { src: "/offline/2.jpeg", span: "col-span-3 row-span-2" },
+  { src: "/offline/3.jpeg", span: "col-span-2 row-span-2" },
+  { src: "/offline/4.jpeg", span: "col-span-1 row-span-2" },
+  { src: "/offline/5.jpeg", span: "col-span-6 row-span-2" },
 ];
 
 const ctaClass =
@@ -137,7 +137,7 @@ export function OfflineCourse() {
 
             <Reveal delay={0.12}>
               <p className="text-lg text-[var(--color-muted)] leading-relaxed mb-8 max-w-md">
-                ورشة مكثفة في القاهرة — تجربة ميدانية بإيدك، تحت إشراف مباشر من محمود.
+                ورشة حضورية بتطبّق فيها كل ما تعلّمته على الطبيعة، بإشراف مباشر من محمود شريف.
               </p>
             </Reveal>
 

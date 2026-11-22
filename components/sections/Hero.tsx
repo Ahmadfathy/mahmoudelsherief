@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ChevronDown, ArrowLeft } from "lucide-react";
+import { ChevronDown, ArrowLeft, MapPin } from "lucide-react";
 import Plyr, { type APITypes, type PlyrProps } from "plyr-react";
 import "plyr-react/plyr.css";
 import { heroContent } from "@/lib/content";
@@ -101,7 +101,7 @@ export function Hero() {
 
         {/* Primary CTA */}
         <Reveal delay={0.6}>
-          <div className="mt-10 md:mt-12 flex justify-center">
+          <div className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-3 md:gap-4">
             <Link
               to="/payment"
               className="inline-flex items-center gap-3 h-14 px-10 rounded-2xl bg-[var(--color-fg)] text-[var(--color-bg)] font-bold text-lg transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] shadow-[0_15px_40px_-15px_rgba(44,54,57,0.4)]"
@@ -109,6 +109,19 @@ export function Hero() {
               اشترك الآن
               <ArrowLeft size={20} strokeWidth={2.5} />
             </Link>
+
+            {/* Secondary — scrolls to the Offline section */}
+            <a
+              href="#offline"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("offline")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+              className="inline-flex items-center gap-2 h-14 px-8 rounded-2xl border-2 border-[var(--color-fg)] text-[var(--color-fg)] font-bold text-base md:text-lg transition-colors duration-200 hover:bg-[var(--color-fg)] hover:text-[var(--color-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)]"
+            >
+              <MapPin size={18} strokeWidth={2} />
+              بتحب الكورس حضوري؟
+            </a>
           </div>
         </Reveal>
 

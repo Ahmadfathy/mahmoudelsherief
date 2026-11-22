@@ -254,8 +254,8 @@ export const offlineCourseContent = {
   eyebrow: "كورس أوفلاين",
   title: {
     before: "تجربة",
-    highlight: "ميدانية",
-    after: "في القاهرة",
+    highlight: "عملية حضورية",
+    after: "",
   },
   // Toggle between two states by flipping isScheduled.
   // When true, fill in `scheduled` with real details. When false, show the waitlist CTA.
