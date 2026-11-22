@@ -38,15 +38,15 @@ export function AcademyHeader() {
 
         <div className="flex items-center gap-3">
           <Link
-            to={user ? "/dashboard" : "/academy"}
+            to={user ? "/dashboard" : "/"}
             className="hidden sm:inline-flex items-center gap-1.5 h-9 px-4 rounded-full border border-[var(--color-border)] text-sm font-bold hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
             {user ? <LayoutDashboard size={15} strokeWidth={1.75} /> : <Home size={15} strokeWidth={1.75} />}
-            {user ? "لوحة حسابي" : "العودة للأكاديمية"}
+            {user ? "لوحة حسابي" : "العودة للرئيسية"}
           </Link>
           <Link
-            to={user ? "/dashboard" : "/academy"}
-            aria-label={user ? "لوحة حسابي" : "العودة للأكاديمية"}
+            to={user ? "/dashboard" : "/"}
+            aria-label={user ? "لوحة حسابي" : "العودة للرئيسية"}
             className="sm:hidden grid place-items-center w-10 h-10 rounded-full border border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors"
           >
             {user ? <LayoutDashboard size={16} strokeWidth={1.75} /> : <Home size={16} strokeWidth={1.75} />}
