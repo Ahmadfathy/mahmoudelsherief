@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Copy, Check, Camera, Send, UserPlus, HelpCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import {
+  ArrowRight, ArrowLeft, Copy, Check, Camera, Send, UserPlus, HelpCircle, Sparkles, Landmark, Calendar, Clock, MapPin,
+  Download, Infinity as InfinityIcon, RefreshCw, MessageSquare,
+} from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
 import { config } from "@/lib/config";
-import { pricingContent } from "@/lib/content";
+import { pricingContent, featuresContent, offlineCourseContent } from "@/lib/content";
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -70,23 +73,44 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+const featureIconMap = {
+  Download,
+  Infinity: InfinityIcon,
+  RefreshCw,
+  MessageSquare,
+  Calendar,
+};
+
 export default function Payment() {
+  const [searchParams] = useSearchParams();
+  const variant: "online" | "offline" = searchParams.get("type") === "offline" ? "offline" : "online";
+  const isOffline = variant === "offline";
+  const { scheduled } = offlineCourseContent;
+
   const paymentConfirmationWhatsApp =
     `https://wa.me/${config.whatsappNumber}?text=` +
-    encodeURIComponent("السلام عليكم، حولت مبلغ الكورس. دي صورة التحويل والرقم المحوّل منه. شكراً.");
+    encodeURIComponent(
+      isOffline
+        ? "السلام عليكم، حولت مبلغ حجز الورشة الأوفلاين. دي صورة التحويل والرقم المحوّل منه. شكراً."
+        : "السلام عليكم، حولت مبلغ الكورس الأون لاين. دي صورة التحويل والرقم المحوّل منه. شكراً."
+    );
 
-  const steps = [
+  const actionSteps = [
     {
-      number: "01",
+      key: "whatsapp",
+      showFor: ["online", "offline"],
       icon: Send,
       title: "ابعت سكرين التحويل على واتساب",
-      description: "بعد ما تحوّل المبلغ، ابعتلنا سكرين لعملية التحويل مع الرقم المحوّل منه على واتساب بتاعنا.",
+      description: isOffline
+        ? "بعد تحويل المبلغ، ابعتلنا سكرين لعملية التحويل مع الرقم المحوّل منه، وقلنا إنك بتحجز للورشة الأوفلاين."
+        : "بعد ما تحوّل المبلغ، ابعتلنا سكرين لعملية التحويل مع الرقم المحوّل منه على واتساب بتاعنا.",
       ctaLabel: "ابعت على واتساب",
       ctaHref: paymentConfirmationWhatsApp,
       ctaExternal: true,
     },
     {
-      number: "02",
+      key: "account",
+      showFor: ["online"], // NOT shown for offline
       icon: UserPlus,
       title: "لسه مش عندك حساب؟ اعمل حساب جديد",
       description: "لو أول مرة معانا، سجّل حساب جديد على المنصة عشان نقدر نفعّل وصولك للكورس بعد تأكيد التحويل.",
@@ -95,7 +119,8 @@ export default function Payment() {
       ctaExternal: false,
     },
     {
-      number: "03",
+      key: "help",
+      showFor: ["online", "offline"],
       icon: HelpCircle,
       title: "محتاج مساعدة؟",
       description: "لو واجهتك أي مشكلة أو حاجة مش واضحة في الخطوات دي، راسلنا على واتساب وهنساعدك على طول.",
@@ -104,6 +129,10 @@ export default function Payment() {
       ctaExternal: true,
     },
   ];
+
+  const visibleSteps = actionSteps
+    .filter((s) => s.showFor.includes(variant))
+    .map((s, i) => ({ ...s, number: `0${i + 1}` })); // renumber sequentially
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" dir="rtl">
@@ -133,13 +162,12 @@ export default function Payment() {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-12"
         >
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-muted)] mb-3">خطوة أخيرة</p>
-          <h1 className="text-4xl md:text-5xl font-black text-[var(--color-fg)] mb-4" style={{ fontFamily: "var(--font-display)" }}>
-            اختار طريقة الدفع
-          </h1>
-          <p className="text-[var(--color-muted)] text-lg max-w-md mx-auto leading-relaxed">
-            افتح التطبيق وامسح الـ QR Code، أو انسخ الرقم وابعت المبلغ يدوياً
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-muted)] mb-3">
+            {isOffline ? "حجز ورشة أوفلاين" : "اشتراك الكورس الأون لاين"}
           </p>
+          <h1 className="text-4xl md:text-5xl font-black text-[var(--color-fg)] mb-4" style={{ fontFamily: "var(--font-display)" }}>
+            {isOffline ? "تفاصيل الحجز" : "اختار طريقة الدفع"}
+          </h1>
         </motion.div>
 
         <motion.div
@@ -148,37 +176,127 @@ export default function Payment() {
           transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mb-10 mx-auto w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-8 text-center"
         >
-          <div className="inline-flex items-center gap-2 bg-[var(--color-secondary)] text-[#1A1A1A] px-3 py-1 rounded-full text-xs font-bold mb-4">
-            {pricingContent.discountBadge}
-          </div>
+          {isOffline ? (
+            <>
+              <div className="inline-flex items-center gap-2 bg-[var(--color-secondary)] text-[#1A1A1A] px-3 py-1 rounded-full text-xs font-bold mb-4">
+                <Sparkles size={11} strokeWidth={2.5} />
+                {scheduled.earlyBirdNote}
+              </div>
 
-          <div className="flex items-baseline justify-center gap-3 mb-1">
-            <span className="text-xl md:text-2xl text-[var(--color-muted)] line-through tabular">
-              {pricingContent.originalPrice}
-            </span>
-            <span className="text-xs text-[var(--color-muted)] uppercase tracking-widest">
-              {pricingContent.currency}
-            </span>
-          </div>
+              <div className="flex items-baseline justify-center gap-3 mb-1">
+                <span className="text-xl md:text-2xl text-[var(--color-muted)] line-through tabular">
+                  {scheduled.price}
+                </span>
+              </div>
 
-          <div className="flex items-baseline justify-center gap-2">
-            <span
-              className="text-5xl md:text-6xl font-black text-[var(--color-fg)] tabular leading-none"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {pricingContent.discountedPrice}
-            </span>
-            <span
-              className="text-xl font-bold text-[var(--color-fg)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {pricingContent.currency}
-            </span>
-          </div>
+              <div className="flex items-baseline justify-center gap-2">
+                <span
+                  className="text-5xl md:text-6xl font-black text-[var(--color-secondary)] tabular leading-none"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {scheduled.earlyBirdPrice}
+                </span>
+              </div>
 
-          <p className="mt-3 text-sm text-[var(--color-muted)]">
-            هو ده المبلغ المطلوب تحويله
-          </p>
+              <p className="mt-3 text-sm text-[var(--color-muted)]">{scheduled.seatsRemaining}</p>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex items-center gap-2 bg-[var(--color-secondary)] text-[#1A1A1A] px-3 py-1 rounded-full text-xs font-bold mb-4">
+                {pricingContent.discountBadge}
+              </div>
+
+              <div className="flex items-baseline justify-center gap-3 mb-1">
+                <span className="text-xl md:text-2xl text-[var(--color-muted)] line-through tabular">
+                  {pricingContent.originalPrice}
+                </span>
+                <span className="text-xs text-[var(--color-muted)] uppercase tracking-widest">
+                  {pricingContent.currency}
+                </span>
+              </div>
+
+              <div className="flex items-baseline justify-center gap-2">
+                <span
+                  className="text-5xl md:text-6xl font-black text-[var(--color-fg)] tabular leading-none"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {pricingContent.discountedPrice}
+                </span>
+                <span
+                  className="text-xl font-bold text-[var(--color-fg)]"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {pricingContent.currency}
+                </span>
+              </div>
+
+              <p className="mt-3 text-sm text-[var(--color-muted)]">هو ده المبلغ المطلوب تحويله</p>
+            </>
+          )}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-12 w-full max-w-2xl mx-auto"
+        >
+          {isOffline ? (
+            // Offline: workshop details card
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-8">
+              <h2
+                className="text-lg md:text-xl font-black text-[var(--color-fg)] mb-5 text-center"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                تفاصيل الورشة
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { icon: Landmark, label: "المحافظة", value: scheduled.governorate },
+                  { icon: Calendar, label: "التاريخ", value: scheduled.date },
+                  { icon: Clock, label: "الوقت", value: scheduled.time },
+                  { icon: MapPin, label: "المكان", value: scheduled.location },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} className="flex items-start gap-3 p-3 rounded-2xl bg-[var(--color-bg)]">
+                      <Icon size={18} strokeWidth={1.75} className="text-[var(--color-secondary)] shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <div className="text-xs text-[var(--color-muted)] mb-0.5">{item.label}</div>
+                        <div className="text-sm font-bold text-[var(--color-fg)]">{item.value || "—"}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            // Online: features list
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-8">
+              <h2
+                className="text-lg md:text-xl font-black text-[var(--color-fg)] mb-5 text-center"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                اللي هتحصل عليه
+              </h2>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {featuresContent.items.map((feature) => {
+                  const Icon = featureIconMap[feature.icon as keyof typeof featureIconMap];
+                  return (
+                    <li key={feature.title} className="flex items-start gap-3 p-3 rounded-2xl bg-[var(--color-bg)]">
+                      <span className="grid place-items-center w-8 h-8 shrink-0 rounded-full bg-[var(--color-secondary)]/15 text-[var(--color-secondary)]">
+                        {Icon && <Icon size={16} strokeWidth={1.75} />}
+                      </span>
+                      <div className="min-w-0 pt-0.5">
+                        <div className="text-sm font-bold text-[var(--color-fg)] mb-0.5">{feature.title}</div>
+                        <div className="text-xs text-[var(--color-muted)] leading-relaxed">{feature.description}</div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
@@ -257,12 +375,12 @@ export default function Payment() {
               className="text-2xl md:text-3xl font-black text-[var(--color-fg)]"
               style={{ fontFamily: "var(--font-display)" }}
             >
-              3 خطوات بس وتبقى معانا
+              {isOffline ? "خطوتين بس وتبقى في الورشة" : "3 خطوات بس وتبقى معانا"}
             </h2>
           </div>
 
           <div className="grid gap-4 md:gap-5">
-            {steps.map((step, i) => {
+            {visibleSteps.map((step, i) => {
               const Icon = step.icon;
               const ctaClass =
                 "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[var(--color-fg)] text-[var(--color-bg)] text-sm font-bold transition-transform duration-200 hover:scale-[1.02]";
@@ -280,7 +398,7 @@ export default function Payment() {
 
               return (
                 <motion.div
-                  key={step.number}
+                  key={step.key}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.5 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}

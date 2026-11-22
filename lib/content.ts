@@ -223,13 +223,13 @@ export const featuresContent = {
 };
 
 export const pricingContent = {
-  eyebrow: "اشترك دلوقتي",
+  eyebrow: "اشتراك الكورس الأون لاين",
   title: {
     before: "ابدأ رحلتك بسعر",
     highlight: "الإطلاق",
     after: "",
   },
-  brief: "فرصة محدودة بمناسبة إطلاق الكورس.",
+  brief: "اشتراك في نسخة الكورس الأون لاين — فرصة محدودة بمناسبة إطلاق الكورس.",
   originalPrice: "1998",
   discountedPrice: "999",
   currency: "ج.م",
@@ -276,7 +276,7 @@ export const offlineCourseContent = {
     earlyBirdNote: "سعر خاص لأول 10 مقاعد",
     seatsRemaining: "7 مقاعد متاحة",
     ctaLabel: "احجز مكانك دلوقتي",
-    ctaHref: "/subscribe", // or specific offline-signup URL
+    ctaHref: "/payment?type=offline",
   },
   notScheduled: {
     headline: "مفيش كورس أوفلاين محدد حالياً",

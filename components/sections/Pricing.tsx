@@ -1,4 +1,4 @@
-import { Check, ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck, Monitor } from "lucide-react";
 import { Link } from "react-router-dom";
 import { pricingContent as p } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
@@ -29,7 +29,14 @@ export function Pricing() {
                 {p.discountBadge}
               </div>
 
-              <div className="p-8 md:p-10">
+              <div className="px-8 md:px-10 pt-6 pb-0 text-center">
+                <div className="inline-flex items-center gap-1.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-3 py-1 rounded-full text-xs font-bold">
+                  <Monitor size={11} strokeWidth={2.5} />
+                  النسخة الأون لاين
+                </div>
+              </div>
+
+              <div className="px-8 md:px-10 pb-8 md:pb-10 pt-4">
                 <div className="text-center mb-8">
                   <div className="flex items-baseline justify-center gap-3 mb-2">
                     <span className="text-2xl text-[var(--color-muted)] line-through tabular">
