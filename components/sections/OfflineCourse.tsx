@@ -1,4 +1,4 @@
-import { MessageCircle, Calendar, Clock, MapPin, Tag } from "lucide-react";
+import { MessageCircle, Calendar, Clock, MapPin, Tag, Sparkles, Landmark, ArrowLeft, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { offlineCourseContent } from "@/lib/content";
 import { config } from "@/lib/config";
@@ -93,6 +93,93 @@ function ScheduledBlock() {
   );
 }
 
+// REVIEW-ONLY: preview of the scheduled-course details, rendered below the waitlist
+// while offlineCourseContent.showScheduledPreview is true.
+function ScheduledPreviewBlock() {
+  return (
+    <div className="mt-8 pt-8 border-t border-dashed border-[var(--color-border)]">
+      {/* Early-bird badge */}
+      {scheduled.earlyBirdNote && (
+        <div className="inline-flex items-center gap-2 bg-[var(--color-secondary)] text-[#1A1A1A] px-3 py-1.5 rounded-full text-xs font-bold mb-4">
+          <Sparkles size={12} strokeWidth={2.5} />
+          {scheduled.earlyBirdNote}
+        </div>
+      )}
+
+      {/* Seats remaining */}
+      {scheduled.seatsRemaining && (
+        <p className="flex items-center gap-2 text-sm text-[var(--color-muted)] mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-secondary)] animate-pulse" />
+          {scheduled.seatsRemaining}
+        </p>
+      )}
+
+      {/* Details card — 2-column grid of (icon + label + value) rows */}
+      <div className="mb-5 p-5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <DetailItem icon={Landmark} label="المحافظة" value={scheduled.governorate} />
+          <DetailItem icon={Calendar} label="التاريخ" value={scheduled.date} />
+          <DetailItem icon={Clock} label="الوقت" value={scheduled.time} />
+          <DetailItem icon={MapPin} label="المكان" value={scheduled.location} href={scheduled.mapUrl || undefined} />
+        </div>
+      </div>
+
+      {/* Price card */}
+      <div className="mb-6 p-5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl text-center">
+        <p className="text-xs uppercase tracking-widest text-[var(--color-muted)] mb-2">سعر الاشتراك</p>
+        <div className="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1">
+          <span className="text-xl md:text-2xl text-[var(--color-muted)] line-through tabular">{scheduled.price}</span>
+          <span
+            className="text-3xl md:text-4xl font-black text-[var(--color-secondary)] tabular"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {scheduled.earlyBirdPrice}
+          </span>
+        </div>
+      </div>
+
+      {/* CTA */}
+      <Link
+        to={scheduled.ctaHref}
+        className="inline-flex w-full items-center justify-center gap-3 h-14 px-8 rounded-2xl bg-[var(--color-fg)] text-[var(--color-bg)] font-bold text-lg transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-secondary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] shadow-[0_15px_40px_-15px_rgba(44,54,57,0.4)]"
+      >
+        {scheduled.ctaLabel}
+        <ArrowLeft size={18} strokeWidth={2.5} />
+      </Link>
+    </div>
+  );
+}
+
+// Small internal helper for detail rows
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  const inner = (
+    <div className="flex items-start gap-2.5">
+      <Icon size={16} strokeWidth={1.75} className="text-[var(--color-secondary)] shrink-0 mt-0.5" />
+      <div className="min-w-0">
+        <div className="text-xs text-[var(--color-muted)] mb-0.5">{label}</div>
+        <div className="text-sm font-bold text-[var(--color-fg)] break-words">{value || "—"}</div>
+      </div>
+    </div>
+  );
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity">
+      {inner}
+    </a>
+  ) : (
+    inner
+  );
+}
+
 export function OfflineCourse() {
   return (
     <section
@@ -142,6 +229,14 @@ export function OfflineCourse() {
             </Reveal>
 
             <Reveal delay={0.16}>{isScheduled ? <ScheduledBlock /> : <WaitlistBlock />}</Reveal>
+
+            {/* REVIEW-ONLY: scheduled preview, shown below the waitlist for design review.
+                Controlled by offlineCourseContent.showScheduledPreview — flip off when done reviewing. */}
+            {!isScheduled && offlineCourseContent.showScheduledPreview && (
+              <Reveal delay={0.22}>
+                <ScheduledPreviewBlock />
+              </Reveal>
+            )}
           </div>
 
           {/* End column — bento gallery (Reveal is the grid item, so it carries the span) */}

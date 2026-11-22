@@ -257,17 +257,25 @@ export const offlineCourseContent = {
     highlight: "عملية حضورية",
     after: "",
   },
+  // REVIEW-ONLY FLAG: when true, shows the scheduled-course preview below the waitlist block.
+  // Set to false (or delete) once review is done, so only the waitlist shows until a real course is scheduled.
+  showScheduledPreview: true,
+
   // Toggle between two states by flipping isScheduled.
   // When true, fill in `scheduled` with real details. When false, show the waitlist CTA.
   isScheduled: false,
+  // Placeholder values below — replace with the real course details before flipping isScheduled.
   scheduled: {
-    date: "",           // e.g. "15 يناير 2026"
-    time: "",           // e.g. "من 10 صباحاً لـ 4 عصراً"
-    location: "",       // e.g. "مدينة نصر، القاهرة"
+    governorate: "القاهرة",
+    date: "15 ديسمبر 2026",
+    time: "من 10 صباحاً لـ 4 عصراً",
+    location: "استوديو محمود شريف، مدينة نصر",
     mapUrl: "",         // Google Maps link (optional)
-    price: "",          // e.g. "2,500 ج.م"
-    seatsRemaining: "", // e.g. "آخر 5 مقاعد"
-    ctaLabel: "احجز مكانك",
+    price: "2,500 ج.م",
+    earlyBirdPrice: "1,500 ج.م",
+    earlyBirdNote: "سعر خاص لأول 10 مقاعد",
+    seatsRemaining: "7 مقاعد متاحة",
+    ctaLabel: "احجز مكانك دلوقتي",
     ctaHref: "/subscribe", // or specific offline-signup URL
   },
   notScheduled: {
