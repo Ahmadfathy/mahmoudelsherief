@@ -35,34 +35,18 @@ const iconHover: Record<string, TargetAndTransition> = {
   ShoppingBag: { y: [0, -4, 0], rotate: [0, -6, 0], transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
-/**
- * Placeholder images from picsum.photos — each seed produces a consistent image.
- *
- * TO REPLACE WITH REAL PIXABAY IMAGES:
- * 1. Visit https://pixabay.com and search for an image matching each persona (suggested keywords in comments).
- * 2. Copy the direct image URL (right-click image → Copy image address), which looks like:
- *    https://cdn.pixabay.com/photo/YYYY/MM/DD/HH/MM/filename_1280.jpg
- * 3. Replace the picsum URL below with the Pixabay URL. The panel stretches to the height of
- *    the card stack (object-cover crops it), so a portrait image that's taller than wide fits best.
- *
- * `perItem` is indexed in the same order as `audienceContent.items`.
- */
+// Real persona images from public/audience/. `perItem` is indexed in the same order as
+// audienceContent.items. `default` (shown before any hover) reuses image 1.
+// 1.1.jpg is intentionally not used.
 const personaImages = {
-  // Default — shows when no persona is hovered. Suggested Pixabay search: "mobile photography" or "smartphone camera"
-  default: "https://picsum.photos/seed/sherief-audience-default/800/1000",
+  default: "/audience/1.jpg",
   perItem: [
-    // 01 — بتبيع منتجات أون لاين. Pixabay search: "ecommerce product photography flat lay"
-    "https://picsum.photos/seed/sherief-audience-ecommerce/800/1000",
-    // 02 — صاحب محتوى سوشيال ميديا. Pixabay search: "content creator phone"
-    "https://picsum.photos/seed/sherief-audience-social/800/1000",
-    // 03 — صاحب مشروع صغير. Pixabay search: "small business owner handmade"
-    "https://picsum.photos/seed/sherief-audience-business/800/1000",
-    // 04 — مبتدئ في التصوير. Pixabay search: "beginner photographer learning"
-    "https://picsum.photos/seed/sherief-audience-beginner/800/1000",
-    // 05 — صاحب موبايل. Pixabay search: "smartphone photography hand"
-    "https://picsum.photos/seed/sherief-audience-phone/800/1000",
-    // 06 — بتوثق ذكرياتك. Pixabay search: "family candid memories"
-    "https://picsum.photos/seed/sherief-audience-memories/800/1000",
+    "/audience/1.jpg", // 01 — بتبيع منتجات أون لاين
+    "/audience/2.jpg", // 02 — صاحب محتوى سوشيال ميديا
+    "/audience/3.jpg", // 03 — صاحب مشروع صغير
+    "/audience/4.jpg", // 04 — مبتدئ في التصوير
+    "/audience/5.jpg", // 05 — صاحب موبايل
+    "/audience/6.jpg", // 06 — بتوثق ذكرياتك
   ],
 };
 

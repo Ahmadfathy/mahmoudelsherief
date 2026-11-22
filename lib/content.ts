@@ -133,7 +133,7 @@ export const audienceContent = {
     {
       icon: "Briefcase",
       title: "صاحب مشروع صغير",
-      description: "بتصور منتجاتك بنفسك وعايز نتايج احترافية",
+      description: "بتصور خدماتك أو منتجاتك بنفسك وعايز نتايج احترافية",
     },
     {
       icon: "Camera",
