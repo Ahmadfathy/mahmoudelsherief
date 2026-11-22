@@ -1,20 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Copy, Check, Camera, ImageUp } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { ArrowRight, ArrowLeft, Copy, Check, Camera, Send, UserPlus, HelpCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { config } from "@/lib/config";
-import { useCourses } from "@/lib/courses-store";
-import { useAuth } from "@/lib/auth-context";
-import { useAuthModal } from "@/lib/auth-modal-context";
-import { apiRequest, friendlyApiError, getStudentToken } from "@/lib/api";
-
-type DiscountPricing = {
-  code: string;
-  original_amount: number;
-  discount_amount: number;
-  final_amount: number;
-  currency: string;
-};
+import { pricingContent } from "@/lib/content";
 
 function CopyButton({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -82,98 +71,39 @@ function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
 }
 
 export default function Payment() {
-  const [searchParams] = useSearchParams();
-  const { courses } = useCourses();
-  const { user } = useAuth();
-  const { openLogin } = useAuthModal();
-  const [method, setMethod] = useState<"vodafone_cash" | "instapay">("vodafone_cash");
-  const [senderPhone, setSenderPhone] = useState("");
-  const [reference, setReference] = useState("");
-  const [receipt, setReceipt] = useState<File | null>(null);
-  const [receiptPreview, setReceiptPreview] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
-  const [pricing, setPricing] = useState<DiscountPricing | null>(null);
-  const [couponError, setCouponError] = useState("");
-  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const paymentConfirmationWhatsApp =
+    `https://wa.me/${config.whatsappNumber}?text=` +
+    encodeURIComponent("السلام عليكم، حولت مبلغ الكورس. دي صورة التحويل والرقم المحوّل منه. شكراً.");
 
-  const requestedCourseId = searchParams.get("course");
-  const selectedCourse = courses.find((course) => course.id === requestedCourseId) ?? courses[0];
-  const displayedAmount = pricing?.final_amount ?? selectedCourse?.price ?? 0;
-
-  async function applyCoupon() {
-    if (!user) return openLogin();
-    const token = getStudentToken();
-    if (!token) return openLogin();
-    if (!selectedCourse || !couponCode.trim()) return;
-    setApplyingCoupon(true);
-    setCouponError("");
-    try {
-      const response = await apiRequest<DiscountPricing>("/discount-codes/validate", {
-        method: "POST",
-        token,
-        body: JSON.stringify({ code: couponCode.trim(), course_id: Number(selectedCourse.id) }),
-      });
-      setPricing(response);
-      setCouponCode(response.code);
-    } catch (requestError) {
-      setPricing(null);
-      setCouponError(friendlyApiError(requestError));
-    } finally {
-      setApplyingCoupon(false);
-    }
-  }
-
-  function handleReceiptChange(file: File | null) {
-    setReceipt(file);
-    setReceiptPreview("");
-
-    if (file?.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = () => setReceiptPreview(String(reader.result ?? ""));
-      reader.readAsDataURL(file);
-    }
-  }
-
-  async function submitPayment(event: React.FormEvent) {
-    event.preventDefault();
-    if (!user) {
-      openLogin();
-      return;
-    }
-    const token = getStudentToken();
-    if (!token) {
-      openLogin();
-      return;
-    }
-    if (!selectedCourse) {
-      setError("تعذر تحميل بيانات الكورس. حدّث الصفحة وحاول مرة أخرى.");
-      return;
-    }
-    setSubmitting(true);
-    setError("");
-    setSuccess(false);
-    const form = new FormData();
-    form.append("course_id", selectedCourse.id);
-    form.append("method", method);
-    if (pricing?.code) form.append("coupon_code", pricing.code);
-    if (senderPhone) form.append("sender_phone", senderPhone);
-    if (reference) form.append("transaction_reference", reference);
-    if (receipt) form.append("receipt", receipt);
-    try {
-      await apiRequest("/payments", { method: "POST", token, body: form });
-      setSuccess(true);
-      setReference("");
-      setReceipt(null);
-      setReceiptPreview("");
-    } catch (requestError) {
-      setError(friendlyApiError(requestError));
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const steps = [
+    {
+      number: "01",
+      icon: Send,
+      title: "ابعت سكرين التحويل على واتساب",
+      description: "بعد ما تحوّل المبلغ، ابعتلنا سكرين لعملية التحويل مع الرقم المحوّل منه على واتساب بتاعنا.",
+      ctaLabel: "ابعت على واتساب",
+      ctaHref: paymentConfirmationWhatsApp,
+      ctaExternal: true,
+    },
+    {
+      number: "02",
+      icon: UserPlus,
+      title: "لسه مش عندك حساب؟ اعمل حساب جديد",
+      description: "لو أول مرة معانا، سجّل حساب جديد على المنصة عشان نقدر نفعّل وصولك للكورس بعد تأكيد التحويل.",
+      ctaLabel: "إنشاء حساب جديد",
+      ctaHref: "/subscribe",
+      ctaExternal: false,
+    },
+    {
+      number: "03",
+      icon: HelpCircle,
+      title: "محتاج مساعدة؟",
+      description: "لو واجهتك أي مشكلة أو حاجة مش واضحة في الخطوات دي، راسلنا على واتساب وهنساعدك على طول.",
+      ctaLabel: "راسلنا على واتساب",
+      ctaHref: config.whatsappContact,
+      ctaExternal: true,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[var(--color-bg)] flex flex-col" dir="rtl">
@@ -210,13 +140,45 @@ export default function Payment() {
           <p className="text-[var(--color-muted)] text-lg max-w-md mx-auto leading-relaxed">
             افتح التطبيق وامسح الـ QR Code، أو انسخ الرقم وابعت المبلغ يدوياً
           </p>
+        </motion.div>
 
-          <div className="inline-flex items-baseline gap-2 mt-6 bg-[var(--color-secondary)] text-[var(--color-card)] px-5 py-2 rounded-full">
-            <span className="text-2xl font-black" style={{ fontFamily: "var(--font-display)" }}>
-              {displayedAmount.toLocaleString("ar-EG")}
-            </span>
-            <span className="text-sm font-bold">{selectedCourse?.currency ?? "ج.م"}</span>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-10 mx-auto w-full max-w-md bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 md:p-8 text-center"
+        >
+          <div className="inline-flex items-center gap-2 bg-[var(--color-secondary)] text-[#1A1A1A] px-3 py-1 rounded-full text-xs font-bold mb-4">
+            {pricingContent.discountBadge}
           </div>
+
+          <div className="flex items-baseline justify-center gap-3 mb-1">
+            <span className="text-xl md:text-2xl text-[var(--color-muted)] line-through tabular">
+              {pricingContent.originalPrice}
+            </span>
+            <span className="text-xs text-[var(--color-muted)] uppercase tracking-widest">
+              {pricingContent.currency}
+            </span>
+          </div>
+
+          <div className="flex items-baseline justify-center gap-2">
+            <span
+              className="text-5xl md:text-6xl font-black text-[var(--color-fg)] tabular leading-none"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {pricingContent.discountedPrice}
+            </span>
+            <span
+              className="text-xl font-bold text-[var(--color-fg)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              {pricingContent.currency}
+            </span>
+          </div>
+
+          <p className="mt-3 text-sm text-[var(--color-muted)]">
+            هو ده المبلغ المطلوب تحويله
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
@@ -225,8 +187,7 @@ export default function Payment() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            onClick={() => setMethod("vodafone_cash")}
-            className={`cursor-pointer bg-[var(--color-card)] border rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors ${method === "vodafone_cash" ? "border-[#E60000] ring-2 ring-[#E60000]/20" : "border-[var(--color-border)] hover:border-[#E60000]/40"}`}
+            className="bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[#E60000]/40 rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors"
           >
             <div className="flex items-center gap-3">
               <img src="/vodafone-icon.png" alt="Vodafone Cash" className="w-[50px] h-[50px] object-contain rounded-full" />
@@ -255,8 +216,7 @@ export default function Payment() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            onClick={() => setMethod("instapay")}
-            className={`cursor-pointer bg-[var(--color-card)] border rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors ${method === "instapay" ? "border-[#6C2BD9] ring-2 ring-[#6C2BD9]/20" : "border-[var(--color-border)] hover:border-[#6C2BD9]/40"}`}
+            className="bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[#6C2BD9]/40 rounded-3xl p-8 flex flex-col items-center gap-6 text-center transition-colors"
           >
             <div className="flex items-center gap-3">
               <img src="/instapay-icon.png" alt="InstaPay" className="w-[50px] h-[50px] object-contain rounded-full" />
@@ -282,73 +242,78 @@ export default function Payment() {
           </motion.div>
         </div>
 
-        <motion.form
-          onSubmit={submitPayment}
+
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="mt-10 w-full max-w-xl rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6"
+          className="mt-14 w-full max-w-3xl"
         >
-          <h2 className="text-xl font-black mb-4">سجّل عملية الدفع</h2>
-          <div className="space-y-3 text-start">
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-              <label className="mb-2 block text-sm font-bold">هل لديك كود خصم؟</label>
-              <div className="flex gap-2">
-                <input value={couponCode} onChange={(event) => { setCouponCode(event.target.value.toUpperCase()); setPricing(null); setCouponError(""); }} placeholder="اكتب كود الخصم" dir="ltr" className="h-11 min-w-0 flex-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-3 uppercase" />
-                <button type="button" onClick={() => void applyCoupon()} disabled={applyingCoupon || !couponCode.trim()} className="h-11 shrink-0 rounded-lg bg-[var(--color-fg)] px-5 text-sm font-bold text-[var(--color-bg)] disabled:opacity-50">{applyingCoupon ? "جاري..." : "تطبيق"}</button>
-              </div>
-              {couponError && <p className="mt-2 text-xs font-bold text-red-500">{couponError}</p>}
-              {pricing && (
-                <div className="mt-3 space-y-1 border-t border-dashed border-[var(--color-border)] pt-3 text-sm">
-                  <div className="flex justify-between text-[var(--color-muted)]"><span>السعر الأصلي</span><span>{pricing.original_amount.toLocaleString("ar-EG")} ج.م</span></div>
-                  <div className="flex justify-between text-green-600"><span>قيمة الخصم</span><span>- {pricing.discount_amount.toLocaleString("ar-EG")} ج.م</span></div>
-                  <div className="flex justify-between font-black"><span>المبلغ المطلوب تحويله</span><span>{pricing.final_amount.toLocaleString("ar-EG")} ج.م</span></div>
-                </div>
-              )}
-            </div>
-            <input value={senderPhone} onChange={(event) => setSenderPhone(event.target.value)} placeholder="رقم الهاتف المحوّل منه" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
-            <input value={reference} onChange={(event) => setReference(event.target.value)} placeholder="رقم العملية (اختياري)" className="w-full h-11 px-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)]" />
-            <label className="block cursor-pointer rounded-xl border-2 border-dashed border-[var(--color-border)] bg-[var(--color-bg)] p-5 text-center transition-colors hover:border-[var(--color-primary)]">
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                onChange={(event) => handleReceiptChange(event.target.files?.[0] ?? null)}
-                className="sr-only"
-              />
-              <span className={`grid items-center gap-4 ${receiptPreview ? "sm:grid-cols-[1fr_160px]" : ""}`}>
-                <span className="flex min-w-0 flex-col items-center gap-2">
-                  <span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-                    <ImageUp size={22} strokeWidth={2} />
-                  </span>
-                  <span className="font-bold text-[var(--color-fg)]">
-                    {receipt ? "تم اختيار الإيصال" : "اختيار صورة إيصال الدفع"}
-                  </span>
-                  <span className="max-w-full truncate text-xs text-[var(--color-muted)]">
-                    {receipt ? receipt.name : "اضغط هنا لاختيار صورة أو ملف PDF"}
-                  </span>
-                </span>
-                {receiptPreview && (
-                  <img
-                    src={receiptPreview}
-                    alt="معاينة إيصال الدفع"
-                    className="h-36 w-full rounded-lg border border-[var(--color-border)] bg-white object-contain"
-                  />
-                )}
-              </span>
-            </label>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            {success && (
-              <div className="rounded-xl bg-green-500/10 p-3 text-center text-sm text-green-600">
-                <p className="font-bold">تم إرسال الدفع للمراجعة بنجاح.</p>
-                <Link to="/dashboard" className="mt-1 inline-block underline">متابعة حالة الطلب من لوحة حسابي</Link>
-              </div>
-            )}
-            <button type="submit" disabled={submitting} className="w-full h-12 rounded-full bg-[var(--color-primary)] text-white font-bold transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-50">
-              {!user ? "سجّل الدخول لإرسال الإيصال" : submitting ? "جاري الإرسال..." : "إرسال الإيصال للمراجعة"}
-            </button>
-            <p className="text-xs text-center text-[var(--color-muted)]">لو واجهتك مشكلة، <a href={config.whatsappSubscribe} target="_blank" rel="noreferrer" className="text-[#25D366] font-bold">تواصل معنا على واتساب</a>.</p>
+          <div className="text-center mb-10">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--color-muted)] mb-3">
+              بعد تحويل المبلغ
+            </p>
+            <h2
+              className="text-2xl md:text-3xl font-black text-[var(--color-fg)]"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              3 خطوات بس وتبقى معانا
+            </h2>
           </div>
-        </motion.form>
+
+          <div className="grid gap-4 md:gap-5">
+            {steps.map((step, i) => {
+              const Icon = step.icon;
+              const ctaClass =
+                "inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-[var(--color-fg)] text-[var(--color-bg)] text-sm font-bold transition-transform duration-200 hover:scale-[1.02]";
+              const CTA = step.ctaExternal ? (
+                <a href={step.ctaHref} target="_blank" rel="noopener noreferrer" className={ctaClass}>
+                  {step.ctaLabel}
+                  <ArrowLeft size={16} strokeWidth={2.5} />
+                </a>
+              ) : (
+                <Link to={step.ctaHref} className={ctaClass}>
+                  {step.ctaLabel}
+                  <ArrowLeft size={16} strokeWidth={2.5} />
+                </Link>
+              );
+
+              return (
+                <motion.div
+                  key={step.number}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.5 + i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                  className="relative flex items-start gap-4 md:gap-5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl md:rounded-3xl p-5 md:p-6"
+                >
+                  <span
+                    className="shrink-0 text-2xl md:text-3xl font-black tabular text-[var(--color-secondary)]"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {step.number}
+                  </span>
+
+                  <span className="shrink-0 grid place-items-center w-11 h-11 md:w-12 md:h-12 rounded-xl bg-[var(--color-secondary)]/10 text-[var(--color-secondary)]">
+                    <Icon size={20} strokeWidth={1.75} />
+                  </span>
+
+                  <div className="flex-1 min-w-0">
+                    <h3
+                      className="text-base md:text-lg font-bold text-[var(--color-fg)] mb-1.5"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-[var(--color-muted)] leading-relaxed mb-4">
+                      {step.description}
+                    </p>
+                    {CTA}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
       </main>
     </div>
   );
