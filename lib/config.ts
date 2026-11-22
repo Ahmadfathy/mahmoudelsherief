@@ -9,6 +9,21 @@ export const config = {
   whatsappNumber: "201012205238",
   email: "mahmoudsherief6@gmail.com",
 
+  // Payment account details per method.
+  // `holderName` is the FULL legal name on the receiving account — it will be
+  // automatically masked in the UI (first word shown, rest shown as first-letter + ***).
+  // Users see enough to verify the recipient without exposing the full name.
+  paymentAccounts: {
+    vodafone: {
+      number: "01012205238",
+      holderName: "محمود شريف محمد ابراهيم علي", // TODO: replace with the actual account holder's full name
+    },
+    instapay: {
+      number: "01113010090",
+      holderName: "محمود شريف محمد ابراهيم علي", // TODO: replace with actual (can be same or different from vodafone)
+    },
+  },
+
   // CTA destinations
   whatsappDetails:
     "https://wa.me/201012205238?text=" +
