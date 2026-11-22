@@ -2,6 +2,7 @@
 import { Camera, Facebook, Instagram } from "lucide-react";
 import { footerContent, navItems } from "@/lib/content";
 import { config } from "@/lib/config";
+import { Link } from "react-router-dom";
 
 // TikTok inline SVG (not in lucide)
 function TikTokIcon({ size = 18 }: { size?: number }) {
@@ -110,8 +111,20 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-[var(--color-border)] flex flex-col md:flex-row items-center justify-between gap-3 text-sm text-[var(--color-muted)]">
+        <div className="mt-12 pt-6 border-t border-[var(--color-border)] flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-[var(--color-muted)]">
           <span>{footerContent.copyright}</span>
+
+          {/* Legal links — centered on mobile, between copyright and credit on desktop */}
+          <div className="flex items-center gap-3 md:gap-4">
+            <Link to="/privacy" className="hover:text-[var(--color-primary)] transition-colors">
+              سياسة الخصوصية
+            </Link>
+            <span className="w-1 h-1 rounded-full bg-[var(--color-border)]" aria-hidden />
+            <Link to="/terms" className="hover:text-[var(--color-primary)] transition-colors">
+              الشروط والأحكام
+            </Link>
+          </div>
+
           <span className="tabular text-xs capitalize tracking-widest">
             Developed by 
             <a

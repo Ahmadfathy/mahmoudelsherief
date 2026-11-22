@@ -12,6 +12,8 @@ import Subscribe from "./pages/Subscribe";
 import SubscriptionEntry from "./pages/SubscriptionEntry";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import StudentDashboard from "./pages/StudentDashboard";
 import Admin from "./pages/Admin";
 import AdminSubscribers from "./pages/AdminSubscribers";
@@ -38,6 +40,8 @@ export default function App() {
                 <Route path="/subscribe" element={<SubscriptionEntry />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="/dashboard" element={<StudentDashboard />} />
                 <Route path="/profile" element={<StudentProfile />} />
                 <Route path="/academy" element={<Academy />} />
