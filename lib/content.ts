@@ -245,8 +245,8 @@ export const pricingContent = {
   ],
   guarantee: {
     title: "ضمان الاسترجاع",
-    description: "لو محتوى الكورس مش عاجبك لأي سبب، نرجّعلك فلوسك كاملة خلال أسبوع من الشراء. بدون أسئلة.",
-    duration: "7 أيام",
+    description: "لو محتوى الكورس مش عاجبك لأي سبب، نرجّعلك فلوسك كاملة خلال 48 ساعة من الشراء. بدون أسئلة.",
+    duration: "48 ساعة",
   },
 };
 
@@ -267,7 +267,7 @@ export const offlineCourseContent = {
   // Placeholder values below — replace with the real course details before flipping isScheduled.
   scheduled: {
     governorate: "القاهرة",
-    date: "15 ديسمبر 2026",
+    date: "من 15 لـ 19 ديسمبر 2026",
     time: "من 10 صباحاً لـ 4 عصراً",
     location: "استوديو محمود شريف، مدينة نصر",
     mapUrl: "",         // Google Maps link (optional)
@@ -313,7 +313,7 @@ export const faqContent = {
     },
     {
       question: "لو مش عاجبني المحتوى، أقدر أرجّع فلوسي؟",
-      answer: "أيوة. عندك ضمان استرجاع كامل خلال أسبوع من الشراء، بدون أسئلة. لو مش عاجبك، نرجّعلك مبلغك بالكامل.",
+      answer: "أيوة. عندك ضمان استرجاع كامل خلال 48 ساعة من الشراء، بدون أسئلة. لو مش عاجبك، نرجّعلك مبلغك بالكامل.",
     },
     {
       question: "إزاي أقدر أدفع؟",

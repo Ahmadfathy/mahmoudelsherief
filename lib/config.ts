@@ -9,13 +9,17 @@ export const config = {
   whatsappNumber: "201012205238",
   email: "mahmoudsherief6@gmail.com",
 
+  // IMPORTANT: Vodafone Cash and InstaPay currently share the SAME recipient number.
+  // The UI consolidates them into one card with both logos. If the numbers ever diverge,
+  // restructure the PaymentMethodsBlock in src/pages/Payment.tsx to render two separate cards again.
+  //
   // Payment account details per method.
   // `holderName` is the FULL legal name on the receiving account — it will be
   // automatically masked in the UI (first word shown, rest shown as first-letter + ***).
   // Users see enough to verify the recipient without exposing the full name.
   paymentAccounts: {
     vodafone: {
-      number: "01012205238",
+      number: "01113010090",
       holderName: "محمود شريف محمد ابراهيم علي", // TODO: replace with the actual account holder's full name
     },
     instapay: {

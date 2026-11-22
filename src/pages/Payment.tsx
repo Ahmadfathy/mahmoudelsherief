@@ -5,7 +5,7 @@ import {
   Sparkles, Landmark, Calendar, Clock, MapPin,
   Download, Infinity as InfinityIcon, RefreshCw, MessageSquare,
   Send, UserPlus, HelpCircle,
-  Copy, Check,
+  Copy, Check, Info,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { config } from "@/lib/config";
@@ -57,27 +57,6 @@ function CopyButton({ text, label }: { text: string; label: string }) {
       )}
       {copied ? "تم النسخ!" : label}
     </button>
-  );
-}
-
-function QrPlaceholder({ src, alt }: { src: string; alt: string }) {
-  const [error, setError] = useState(false);
-
-  if (!error) {
-    return (
-      <img
-        src={src}
-        alt={alt}
-        onError={() => setError(true)}
-        className="w-36 h-36 object-contain rounded-xl bg-white"
-      />
-    );
-  }
-
-  return (
-    <div className="w-36 h-36 rounded-xl border-2 border-dashed border-[var(--color-border)] grid place-items-center bg-[var(--color-subtle)]">
-      <p className="text-xs text-[var(--color-muted)] p-3 text-center">ضع صورة الـ QR Code هنا</p>
-    </div>
   );
 }
 
@@ -188,30 +167,9 @@ function CombinedSummaryCard({ isOffline }: { isOffline: boolean }) {
 
 function PaymentMethodsBlock() {
   const { paymentAccounts } = config;
-  const methods = [
-    {
-      key: "vodafone",
-      title: "فودافون كاش",
-      subtitle: "Vodafone Cash",
-      icon: "/vodafone-icon.png",
-      qr: "/vodafone-cash.jpeg",
-      numberLabel: "رقم المحفظة",
-      number: paymentAccounts.vodafone.number,
-      holderName: paymentAccounts.vodafone.holderName,
-      instruction: "افتح تطبيق فودافون كاش ← ادفع ← امسح الـ QR أو ابعت على الرقم",
-    },
-    {
-      key: "instapay",
-      title: "إنستاباي",
-      subtitle: "InstaPay",
-      icon: "/instapay-icon.png",
-      qr: "/instapay.jpeg",
-      numberLabel: "رقم الحساب",
-      number: paymentAccounts.instapay.number,
-      holderName: paymentAccounts.instapay.holderName,
-      instruction: "افتح تطبيق إنستاباي ← تحويل ← امسح الـ QR أو ابعت على الرقم",
-    },
-  ];
+  // Both methods share the same account (see the note above paymentAccounts in lib/config.ts).
+  const sharedNumber = paymentAccounts.vodafone.number;
+  const sharedHolder = paymentAccounts.vodafone.holderName;
 
   return (
     <div>
@@ -222,69 +180,74 @@ function PaymentMethodsBlock() {
         طريقة الدفع
       </h2>
 
-      <div className="space-y-4">
-        {methods.map((method, i) => (
-          <motion.div
-            key={method.key}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 + i * 0.08, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-5 md:p-6"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-start gap-5">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-4">
-                  <img
-                    src={method.icon}
-                    alt=""
-                    className="h-10 w-10 object-contain rounded-full"
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
-                  <div>
-                    <h3 className="text-lg font-black text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>
-                      {method.title}
-                    </h3>
-                    <p className="text-xs text-[var(--color-muted)] tabular">{method.subtitle}</p>
-                  </div>
-                </div>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-5 md:p-7"
+      >
+        {/* Top row — both method logos */}
+        <div className="flex items-center gap-3 md:gap-4 mb-5 pb-5 border-b border-dashed border-[var(--color-border)]">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <img
+              src="/wallet.png"
+              alt=""
+              className="h-10 w-10 object-contain shrink-0"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
+            />
+            <span className="font-black text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>
+              محفظة
+            </span>
+          </div>
 
-                <div className="space-y-3">
-                  {/* Account number */}
-                  <div>
-                    <p className="text-xs text-[var(--color-muted)] mb-1.5 uppercase tracking-widest">{method.numberLabel}</p>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <p
-                        className="text-xl md:text-2xl font-black text-[var(--color-fg)] tabular"
-                        style={{ fontFamily: "var(--font-display)" }}
-                        dir="ltr"
-                      >
-                        {method.number}
-                      </p>
-                      <CopyButton text={method.number} label="نسخ" />
-                    </div>
-                  </div>
+          <span className="text-[var(--color-muted)] font-bold text-sm shrink-0">أو</span>
 
-                  {/* Account holder — MASKED */}
-                  <div>
-                    <p className="text-xs text-[var(--color-muted)] mb-1.5 uppercase tracking-widest">اسم صاحب الحساب</p>
-                    <p className="text-base font-bold text-[var(--color-fg)]">{maskHolderName(method.holderName)}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+            <span className="font-black text-[var(--color-fg)]" style={{ fontFamily: "var(--font-display)" }}>
+              إنستاباي
+            </span>
+            <img
+              src="/instapay-icon.png"
+              alt=""
+              className="h-10 w-10 object-contain shrink-0"
+              onError={(e) => { e.currentTarget.style.display = "none"; }}
+            />
+          </div>
+        </div>
 
-              {/* QR code */}
-              <div className="self-center sm:self-start">
-                <QrPlaceholder src={method.qr} alt={`QR Code ${method.title}`} />
-              </div>
-            </div>
-
-            {/* Instruction */}
-            <p className="mt-4 text-xs text-[var(--color-muted)] leading-relaxed pt-3 border-t border-dashed border-[var(--color-border)]">
-              {method.instruction}
+        {/* Shared number */}
+        <div className="mb-5">
+          <p className="text-xs text-[var(--color-muted)] mb-1.5 uppercase tracking-widest">رقم الحساب</p>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p
+              className="text-2xl md:text-3xl font-black text-[var(--color-fg)] tabular"
+              style={{ fontFamily: "var(--font-display)" }}
+              dir="ltr"
+            >
+              {sharedNumber}
             </p>
-          </motion.div>
-        ))}
-      </div>
+            <CopyButton text={sharedNumber} label="نسخ الرقم" />
+          </div>
+        </div>
+
+        {/* Shared holder — masked */}
+        <div className="mb-5">
+          <p className="text-xs text-[var(--color-muted)] mb-1.5 uppercase tracking-widest">اسم صاحب الحساب</p>
+          <p className="text-base font-bold text-[var(--color-fg)]">{maskHolderName(sharedHolder)}</p>
+        </div>
+
+        {/* Shared-number note */}
+        <div className="pt-4 border-t border-dashed border-[var(--color-border)]">
+          <p className="text-xs text-[var(--color-secondary)] font-bold flex items-center gap-2">
+            <Info size={13} strokeWidth={2.5} />
+            نفس الرقم شغّال مع محفظة و إنستاباي
+          </p>
+          <ul className="mt-3 space-y-1.5 text-xs text-[var(--color-muted)] leading-relaxed">
+            <li>• <span className="font-bold text-[var(--color-fg)]">محفظة:</span> افتح التطبيق ← تحويل ← رقم محفظة</li>
+            <li>• <span className="font-bold text-[var(--color-fg)]">إنستاباي:</span> افتح التطبيق ← تحويل ← ابعت على الرقم</li>
+          </ul>
+        </div>
+      </motion.div>
     </div>
   );
 }
