@@ -11,7 +11,7 @@ import {
   Instagram,
   Briefcase,
   Heart,
-  TrendingUp,
+  ShoppingBag,
 } from "lucide-react";
 import { audienceContent } from "@/lib/content";
 import { Reveal } from "@/components/ui/Reveal";
@@ -22,7 +22,7 @@ const iconMap = {
   Instagram,
   Briefcase,
   Heart,
-  TrendingUp,
+  ShoppingBag,
 };
 
 // Per-icon hover personality — triggered by hovering/focusing anywhere on the box
@@ -32,7 +32,7 @@ const iconHover: Record<string, TargetAndTransition> = {
   Instagram: { scale: [1, 1.15, 1], rotate: [0, 8, 0], transition: { duration: 0.5, ease: "easeInOut" } },
   Briefcase: { y: [0, -3, 0], transition: { duration: 0.3, ease: "easeInOut" } },
   Heart: { scale: [1, 1.2, 1], transition: { duration: 0.5, ease: "easeInOut" } },
-  TrendingUp: { y: [0, -4, 0], scale: [1, 1.08, 1], transition: { duration: 0.4, ease: "easeInOut" } },
+  ShoppingBag: { y: [0, -4, 0], rotate: [0, -6, 0], transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
 /**
@@ -42,28 +42,27 @@ const iconHover: Record<string, TargetAndTransition> = {
  * 1. Visit https://pixabay.com and search for an image matching each persona (suggested keywords in comments).
  * 2. Copy the direct image URL (right-click image → Copy image address), which looks like:
  *    https://cdn.pixabay.com/photo/YYYY/MM/DD/HH/MM/filename_1280.jpg
- * 3. Replace the picsum URL below with the Pixabay URL. Keep the 4:5 aspect ratio in mind
- *    (ideally an image that's taller than wide looks best in this slot).
+ * 3. Replace the picsum URL below with the Pixabay URL. The panel stretches to the height of
+ *    the card stack (object-cover crops it), so a portrait image that's taller than wide fits best.
  *
  * `perItem` is indexed in the same order as `audienceContent.items`.
- * The 6th entry is reserved for a future "عايز يتحول للاحتراف" persona.
  */
 const personaImages = {
   // Default — shows when no persona is hovered. Suggested Pixabay search: "mobile photography" or "smartphone camera"
   default: "https://picsum.photos/seed/sherief-audience-default/800/1000",
   perItem: [
-    // 01 — صاحب موبايل عايز يستفيد منه. Pixabay search: "smartphone hand"
-    "https://picsum.photos/seed/sherief-audience-1/800/1000",
-    // 02 — مبتدئ في التصوير. Pixabay search: "beginner photographer" or "learning camera"
-    "https://picsum.photos/seed/sherief-audience-2/800/1000",
-    // 03 — صاحب محتوى سوشيال ميديا. Pixabay search: "content creator instagram" or "social media"
-    "https://picsum.photos/seed/sherief-audience-3/800/1000",
-    // 04 — صاحب مشروع صغير. Pixabay search: "small business owner" or "handmade product photo"
-    "https://picsum.photos/seed/sherief-audience-4/800/1000",
-    // 05 — توثيق ذكريات. Pixabay search: "family memories" or "candid moment"
-    "https://picsum.photos/seed/sherief-audience-5/800/1000",
-    // 06 — عايز يتحول للاحتراف. Pixabay search: "professional photographer" or "portfolio shoot"
-    "https://picsum.photos/seed/sherief-audience-6/800/1000",
+    // 01 — بتبيع منتجات أون لاين. Pixabay search: "ecommerce product photography flat lay"
+    "https://picsum.photos/seed/sherief-audience-ecommerce/800/1000",
+    // 02 — صاحب محتوى سوشيال ميديا. Pixabay search: "content creator phone"
+    "https://picsum.photos/seed/sherief-audience-social/800/1000",
+    // 03 — صاحب مشروع صغير. Pixabay search: "small business owner handmade"
+    "https://picsum.photos/seed/sherief-audience-business/800/1000",
+    // 04 — مبتدئ في التصوير. Pixabay search: "beginner photographer learning"
+    "https://picsum.photos/seed/sherief-audience-beginner/800/1000",
+    // 05 — صاحب موبايل. Pixabay search: "smartphone photography hand"
+    "https://picsum.photos/seed/sherief-audience-phone/800/1000",
+    // 06 — بتوثق ذكرياتك. Pixabay search: "family candid memories"
+    "https://picsum.photos/seed/sherief-audience-memories/800/1000",
   ],
 };
 
@@ -123,7 +122,7 @@ export function WhoNeedsThis() {
         </div>
 
         {/* Split layout */}
-        <div className="relative grid lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] gap-10 lg:gap-14 mt-12 md:mt-16">
+        <div className="relative grid lg:grid-cols-[minmax(0,6fr)_minmax(0,6fr)] items-stretch gap-10 lg:gap-14 mt-12 md:mt-16">
           {/* RIGHT column in RTL — stacked persona boxes */}
           <div className="flex flex-col gap-3">
             {audienceContent.items.map((item, i) => {
@@ -200,10 +199,10 @@ export function WhoNeedsThis() {
             })}
           </div>
 
-          {/* LEFT column in RTL — sticky image panel (desktop only) */}
-          <div className="hidden lg:block">
-            <div className="sticky top-28">
-              <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_20px_50px_-20px_rgba(44,54,57,0.3)]">
+          {/* LEFT column in RTL — image panel (desktop only), stretched to the card stack's height */}
+          <div className="hidden lg:block h-full">
+            <div className="h-full">
+              <div className="relative w-full h-full min-h-[500px] rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_20px_50px_-20px_rgba(44,54,57,0.3)]">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentImageSrc}

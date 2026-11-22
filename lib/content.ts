@@ -121,14 +121,9 @@ export const audienceContent = {
   },
   items: [
     {
-      icon: "Smartphone",
-      title: "صاحب موبايل وعايز تستفيد منه",
-      description: "ومش عارف إزاي تطلع منه أحسن صور ممكنة",
-    },
-    {
-      icon: "Camera",
-      title: "مبتدئ في التصوير",
-      description: "ومش قادر تشتري كاميرا احترافية دلوقتي",
+      icon: "ShoppingBag",
+      title: "بتبيع منتجات أون لاين",
+      description: "عايز تطلّع صور منتجاتك احترافية تجذب العميل من أول نظرة.",
     },
     {
       icon: "Instagram",
@@ -139,6 +134,16 @@ export const audienceContent = {
       icon: "Briefcase",
       title: "صاحب مشروع صغير",
       description: "بتصور منتجاتك بنفسك وعايز نتايج احترافية",
+    },
+    {
+      icon: "Camera",
+      title: "مبتدئ في التصوير",
+      description: "ومش قادر تشتري كاميرا احترافية دلوقتي",
+    },
+    {
+      icon: "Smartphone",
+      title: "صاحب موبايل وعايز تستفيد منه",
+      description: "ومش عارف إزاي تطلع منه أحسن صور ممكنة",
     },
     {
       icon: "Heart",
