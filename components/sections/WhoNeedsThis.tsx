@@ -203,16 +203,17 @@ export function WhoNeedsThis() {
           <div className="hidden lg:block h-full">
             <div className="h-full">
               <div className="relative w-full h-full min-h-[500px] rounded-3xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)] shadow-[0_20px_50px_-20px_rgba(44,54,57,0.3)]">
-                <AnimatePresence mode="wait">
+                {/* Simultaneous crossfade (no mode="wait") so the new image shows from the first frame */}
+                <AnimatePresence initial={false}>
                   <motion.img
                     key={currentImageSrc}
                     src={currentImageSrc}
                     alt=""
                     aria-hidden="true"
-                    initial={{ opacity: 0, scale: 1.02 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.02 }}
-                    transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
                     className="absolute inset-0 w-full h-full object-cover"
                   />
                 </AnimatePresence>
