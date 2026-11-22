@@ -11,6 +11,7 @@ import CourseDetail from "./pages/CourseDetail";
 import Subscribe from "./pages/Subscribe";
 import SubscriptionEntry from "./pages/SubscriptionEntry";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import StudentDashboard from "./pages/StudentDashboard";
 import Admin from "./pages/Admin";
 import AdminSubscribers from "./pages/AdminSubscribers";
@@ -36,6 +37,7 @@ export default function App() {
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/subscribe" element={<SubscriptionEntry />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<StudentDashboard />} />
                 <Route path="/profile" element={<StudentProfile />} />
                 <Route path="/academy" element={<Academy />} />
