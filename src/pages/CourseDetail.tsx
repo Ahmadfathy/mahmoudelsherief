@@ -21,7 +21,7 @@ import { useCourses } from "@/lib/courses-store";
 import { useAuth } from "@/lib/auth-context";
 import { useAuthModal } from "@/lib/auth-modal-context";
 import { useCourseProgress } from "@/lib/progress";
-import { apiDownload, friendlyApiError, getStudentToken } from "@/lib/api";
+import { apiDownload, apiUrl, friendlyApiError, getStudentToken } from "@/lib/api";
 
 function getYouTubeId(url: string): string | null {
   try {
@@ -274,6 +274,7 @@ export default function CourseDetail() {
     () => course?.units.flatMap((u) => u.lessons) ?? [],
     [course]
   );
+  const previewLessons = useMemo(() => flatLessons.filter((lesson) => lesson.isPreview), [flatLessons]);
 
   const [openUnitId, setOpenUnitId] = useState(course?.units[0]?.id ?? "");
   const [activeLessonId, setActiveLessonId] = useState(flatLessons[0]?.id ?? "");
@@ -298,14 +299,37 @@ export default function CourseDetail() {
   useEffect(() => {
     if (!course?.units.length) return;
     setOpenUnitId((current) => current || course.units[0].id);
-    setActiveLessonId((current) => current || course.units.flatMap((unit) => unit.lessons)[0]?.id || "");
-  }, [course?.id, course?.units]);
+    setActiveLessonId((current) => {
+      if (courseLocked) {
+        const currentLesson = flatLessons.find((lesson) => lesson.id === current);
+        return currentLesson?.isPreview ? current : previewLessons[0]?.id ?? "";
+      }
+      return current || flatLessons[0]?.id || "";
+    });
+  }, [course?.id, course?.units, courseLocked, flatLessons, previewLessons]);
 
   useEffect(() => {
     let objectUrl = "";
     setProtectedVideoUrl("");
-    const lesson = flatLessons.find((item) => item.id === activeLessonId) ?? flatLessons[0];
-    if (lesson?.videoType !== "upload" || courseLocked) return;
+    const selected = flatLessons.find((item) => item.id === activeLessonId);
+    const lesson = courseLocked ? (selected?.isPreview ? selected : previewLessons[0]) : (selected ?? flatLessons[0]);
+    if (lesson?.videoType !== "upload") return;
+    if (courseLocked) {
+      if (!lesson.isPreview) return;
+      fetch(apiUrl(`/lessons/${lesson.id}/preview-video`), { headers: { Accept: "video/*" } })
+        .then((response) => {
+          if (!response.ok) throw new Error("Preview unavailable");
+          return response.blob();
+        })
+        .then((blob) => {
+          objectUrl = URL.createObjectURL(blob);
+          setProtectedVideoUrl(objectUrl);
+        })
+        .catch(() => setProtectedVideoUrl(""));
+      return () => {
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+      };
+    }
     const token = getStudentToken();
     if (!token) return;
     apiDownload(`/lessons/${lesson.id}/video`, token)
@@ -317,23 +341,20 @@ export default function CourseDetail() {
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [activeLessonId, flatLessons, courseLocked]);
+  }, [activeLessonId, flatLessons, previewLessons, courseLocked]);
 
   useEffect(() => {
     setThumbnailDismissed(false);
   }, [activeLessonId]);
 
-  useEffect(() => {
-    if (courseLocked && !user) openLogin();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course?.id, courseLocked, user]);
-
   if (pageLoading && !course) return <div className="min-h-screen grid place-items-center">جاري تحميل الكورس...</div>;
   if (!course) return <div className="min-h-screen grid place-items-center text-red-500">{pageError || "الكورس غير موجود."}</div>;
 
   const locked = courseLocked;
-  const activeLesson: Lesson | undefined =
-    flatLessons.find((l) => l.id === activeLessonId) ?? flatLessons[0];
+  const selectedLesson = flatLessons.find((lesson) => lesson.id === activeLessonId);
+  const activeLesson: Lesson | undefined = locked
+    ? (selectedLesson?.isPreview ? selectedLesson : previewLessons[0])
+    : (selectedLesson ?? flatLessons[0]);
   const activeIndex = flatLessons.findIndex((l) => l.id === activeLesson?.id);
   const nextLesson = activeIndex >= 0 ? flatLessons[activeIndex + 1] : undefined;
 
@@ -383,7 +404,34 @@ export default function CourseDetail() {
         {pageError && <p className="mb-4 text-sm text-red-500">{pageError}</p>}
 
         {locked ? (
-          <PaywallCard courseTitle={course.title} isLoggedIn={!!user} onLogin={openLogin} />
+          <div className="space-y-6">
+            {activeLesson?.isPreview && (
+              <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
+                <div className="min-w-0">
+                  <div className="mb-3 flex items-center justify-between gap-3"><div><span className="inline-flex rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-600">درس مجاني</span><h1 className="mt-2 text-xl font-black">{activeLesson.title}</h1></div></div>
+                  <div className="grid aspect-video place-items-center overflow-hidden rounded-2xl border border-[var(--color-border)] bg-black">
+                    {activeLesson.thumbnailImageUrl && !thumbnailDismissed ? (
+                      <button type="button" onClick={() => setThumbnailDismissed(true)} className="group relative h-full w-full" aria-label={`تشغيل ${activeLesson.title}`}><img src={activeLesson.thumbnailImageUrl} alt={`صورة درس ${activeLesson.title}`} className="h-full w-full object-cover" /><span className="absolute inset-0 bg-black/20" /><span className="absolute inset-0 m-auto grid h-16 w-16 place-items-center rounded-full bg-white/90 text-[var(--color-primary)] shadow-xl"><Play size={28} fill="currentColor" /></span></button>
+                    ) : youtubeId ? (
+                      <YouTubeVideoPlayer videoId={youtubeId} title={activeLesson.title} />
+                    ) : embedUrl ? (
+                      <iframe src={embedUrl} title={activeLesson.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen className="block h-full w-full" />
+                    ) : directVideoUrl ? (
+                      <CourseVideoPlayer src={directVideoUrl} title={activeLesson.title} />
+                    ) : (
+                      <div className="p-8 text-center text-white/60"><PlayCircle size={40} className="mx-auto mb-3" /><p>الفيديو هيتم رفعه قريباً</p></div>
+                    )}
+                  </div>
+                  {activeLesson.description && <p className="mt-4 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 leading-7 text-[var(--color-muted)]">{activeLesson.description}</p>}
+                </div>
+                <aside className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)]">
+                  <div className="border-b border-[var(--color-border)] p-4"><h2 className="font-black">الدروس المجانية</h2><p className="mt-1 text-xs text-[var(--color-muted)]">شاهد قبل الاشتراك في الكورس</p></div>
+                  <div className="divide-y divide-[var(--color-border)]">{previewLessons.map((lesson) => <button key={lesson.id} type="button" onClick={() => selectLesson(lesson.id)} className={`flex w-full items-center gap-3 p-3 text-start text-sm ${lesson.id === activeLesson.id ? "bg-[var(--color-primary)]/10 font-bold text-[var(--color-primary)]" : "hover:bg-[var(--color-subtle)]"}`}>{lesson.thumbnailImageUrl ? <img src={lesson.thumbnailImageUrl} alt="" className="h-10 w-16 rounded-md object-cover" /> : <PlayCircle size={18} />}<span className="min-w-0 flex-1"><span className="block truncate">{lesson.title}</span><small className="text-green-600">مجاني</small></span></button>)}</div>
+                </aside>
+              </div>
+            )}
+            <PaywallCard courseTitle={course.title} isLoggedIn={!!user} onLogin={openLogin} />
+          </div>
         ) : (
           <div className="flex flex-col-reverse lg:flex-row gap-6">
             {/* Main content */}

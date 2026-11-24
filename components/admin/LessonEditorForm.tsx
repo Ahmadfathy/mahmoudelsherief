@@ -35,6 +35,7 @@ export function LessonEditorForm({
     videoFile?: File;
     thumbnailFile?: File;
     resourceFiles?: File[];
+    isPreview: boolean;
   }) => Promise<void> | void;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -48,6 +49,7 @@ export function LessonEditorForm({
   const [videoFile, setVideoFile] = useState<File | undefined>();
   const [thumbnailFile, setThumbnailFile] = useState<File | undefined>();
   const [thumbnailPreview, setThumbnailPreview] = useState(initial?.thumbnailImageUrl ?? "");
+  const [isPreview, setIsPreview] = useState(initial?.isPreview ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -141,6 +143,7 @@ export function LessonEditorForm({
         videoFile,
         thumbnailFile,
         resourceFiles,
+        isPreview,
       });
     } catch (submitError) {
       setError(friendlyApiError(submitError, "تعذر حفظ الدرس. حاول مرة أخرى."));
@@ -274,6 +277,10 @@ export function LessonEditorForm({
         rows={2}
         className="w-full px-3 py-2 text-sm rounded-md border border-[var(--color-border)] bg-[var(--color-card)] resize-none"
       />
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+        <input type="checkbox" checked={isPreview} onChange={(event) => setIsPreview(event.target.checked)} className="mt-0.5 h-4 w-4 accent-[var(--color-primary)]" />
+        <span><strong className="block text-sm">عرض هذا الدرس مجانًا</strong><small className="mt-0.5 block text-xs text-[var(--color-muted)]">يستطيع أي شخص مشاهدة الفيديو بدون شراء الكورس، بينما تظل ملفات الدرس محمية.</small></span>
+      </label>
       <textarea
         value={linksText}
         onChange={(e) => setLinksText(e.target.value)}

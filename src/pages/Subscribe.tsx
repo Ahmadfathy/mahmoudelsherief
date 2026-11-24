@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AcademyHeader } from "@/components/academy/AcademyHeader";
 import { PhoneInput, isValidPhoneInput, phoneForSubmit, DEFAULT_COUNTRY } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
+import { RegistrationOtpForm } from "@/components/academy/RegistrationOtpForm";
 import { useAuth } from "@/lib/auth-context";
 import { AlertCircle } from "lucide-react";
 import { ApiError, friendlyApiError } from "@/lib/api";
@@ -20,6 +21,8 @@ export default function Subscribe() {
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<RegisterField | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
 
   if (!loading && user) return <Navigate to="/dashboard" replace />;
 
@@ -52,8 +55,9 @@ export default function Subscribe() {
 
     setSubmitting(true);
     try {
-      await register({ name, email, phone: phoneForSubmit(phone, country), password });
-      navigate("/dashboard", { replace: true });
+      const response = await register({ name, email, phone: phoneForSubmit(phone, country), password });
+      setPendingEmail(response.email);
+      setOtpMessage(response.message);
     } catch (requestError) {
       setError(friendlyApiError(requestError));
       if (requestError instanceof ApiError) {
@@ -72,8 +76,11 @@ export default function Subscribe() {
       <AcademyHeader />
       <main className="mx-auto max-w-lg px-5 py-10 md:py-14">
         <Link to="/subscribe" className="mb-6 inline-block text-sm text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]">← رجوع</Link>
+        {pendingEmail ? (
+          <RegistrationOtpForm email={pendingEmail} initialMessage={otpMessage} onVerified={() => navigate("/dashboard", { replace: true })} onBack={() => { setPendingEmail(""); setOtpMessage(""); }} />
+        ) : <>
         <h1 className="mb-1 text-3xl font-black" style={{ fontFamily: "var(--font-display)" }}>إنشاء حساب جديد</h1>
-        <p className="mb-7 text-[var(--color-muted)]">سجّل بياناتك، وبعدها اختار الكورس المناسب من لوحة حسابك.</p>
+        <p className="mb-7 text-[var(--color-muted)]">سجّل بياناتك، وبعدها فعّل بريدك الإلكتروني.</p>
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div><label className="mb-1.5 block text-sm font-bold">الاسم</label><input type="text" value={name} onChange={(event) => { setName(event.target.value); if (errorField === "name") { setError(""); setErrorField(null); } }} required autoComplete="name" aria-invalid={errorField === "name"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "name" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
           <div><label className="mb-1.5 block text-sm font-bold">الإيميل</label><input type="email" value={email} onChange={(event) => { setEmail(event.target.value); if (errorField === "email") { setError(""); setErrorField(null); } }} required autoComplete="email" aria-invalid={errorField === "email"} className={`h-12 w-full rounded-xl border bg-[var(--color-card)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "email" ? "border-red-400 bg-red-50/40 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
@@ -90,6 +97,7 @@ export default function Subscribe() {
           )}
           <button type="submit" disabled={submitting} className="h-12 w-full rounded-full bg-[var(--color-primary)] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50">{submitting ? "جاري إنشاء الحساب..." : "إنشاء الحساب"}</button>
         </form>
+        </>}
       </main>
     </div>
   );

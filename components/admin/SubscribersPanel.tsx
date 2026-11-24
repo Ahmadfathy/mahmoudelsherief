@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckCircle2, Search, UserRound, XCircle } from "lucide-react";
+import { CheckCircle2, Plus, Search, UserRound, X, XCircle } from "lucide-react";
 import { apiRequest, friendlyApiError, getAdminToken } from "@/lib/api";
+import { DEFAULT_COUNTRY, PhoneInput, phoneForSubmit } from "@/components/academy/PhoneInput";
+import { PasswordInput } from "@/components/academy/PasswordInput";
 
 type SubscriptionStatus = "pending" | "approved" | "rejected";
 
@@ -167,12 +169,98 @@ type StudentUser = {
   created_at: string;
 };
 
+type CourseOption = { id: number; title: string };
+
+function AddSubscriberModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => Promise<void> }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [status, setStatus] = useState<"active" | "suspended">("active");
+  const [courseId, setCourseId] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiRequest<{ data: CourseOption[] }>("/admin/courses", { token: getAdminToken() })
+      .then((response) => setCourses(response.data))
+      .catch((requestError) => setError(friendlyApiError(requestError, "تعذر تحميل الكورسات.")));
+  }, []);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError("");
+    if (password !== passwordConfirmation) {
+      setError("تأكيد كلمة السر غير مطابق.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await apiRequest("/admin/users", {
+        method: "POST",
+        token: getAdminToken(),
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phoneForSubmit(phone, country),
+          password,
+          password_confirmation: passwordConfirmation,
+          status,
+          course_id: courseId ? Number(courseId) : null,
+          starts_at: courseId && startsAt ? startsAt : null,
+          expires_at: courseId && expiresAt ? expiresAt : null,
+        }),
+      });
+      await onCreated();
+      onClose();
+    } catch (requestError) {
+      setError(friendlyApiError(requestError, "تعذر إضافة المشترك."));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="add-subscriber-title" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <form onSubmit={submit} className="my-6 w-full max-w-2xl rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-2xl md:p-8">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div><h2 id="add-subscriber-title" className="text-2xl font-black">إضافة مشترك جديد</h2><p className="mt-1 text-sm text-[var(--color-muted)]">الحساب سيكون مفعّلًا بدون الحاجة إلى OTP.</p></div>
+          <button type="button" onClick={onClose} aria-label="إغلاق" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[var(--color-subtle)]"><X size={18} /></button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">اسم المشترك</span><input value={name} onChange={(event) => setName(event.target.value)} required autoComplete="name" className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 outline-none focus:ring-2 focus:ring-[var(--color-primary)]" /></label>
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">البريد الإلكتروني</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" dir="ltr" className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4 text-left outline-none focus:ring-2 focus:ring-[var(--color-primary)]" /></label>
+          <label className="block md:col-span-2"><span className="mb-1.5 block text-sm font-bold">رقم الموبايل</span><PhoneInput value={phone} onChange={setPhone} country={country} onCountryChange={setCountry} inputBackgroundClassName="bg-[var(--color-bg)]" /></label>
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">كلمة السر</span><PasswordInput value={password} onChange={setPassword} autoComplete="new-password" minLength={8} /></label>
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">تأكيد كلمة السر</span><PasswordInput value={passwordConfirmation} onChange={setPasswordConfirmation} autoComplete="new-password" minLength={8} placeholder="أعد كتابة كلمة السر" /></label>
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">حالة الحساب</span><select value={status} onChange={(event) => setStatus(event.target.value as "active" | "suspended")} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4"><option value="active">نشط</option><option value="suspended">موقوف</option></select></label>
+          <label className="block"><span className="mb-1.5 block text-sm font-bold">تفعيل كورس (اختياري)</span><select value={courseId} onChange={(event) => setCourseId(event.target.value)} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4"><option value="">بدون كورس</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}</select></label>
+          {courseId && <>
+            <label className="block"><span className="mb-1.5 block text-sm font-bold">بداية الاشتراك (اختياري)</span><input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4" /></label>
+            <label className="block"><span className="mb-1.5 block text-sm font-bold">نهاية الاشتراك (اختياري)</span><input type="datetime-local" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} className="h-12 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] px-4" /></label>
+          </>}
+        </div>
+
+        {error && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        <div className="mt-6 flex justify-end gap-3"><button type="button" onClick={onClose} className="h-11 rounded-full border border-[var(--color-border)] px-6 font-bold">إلغاء</button><button type="submit" disabled={submitting} className="h-11 rounded-full bg-[var(--color-primary)] px-7 font-bold text-white disabled:opacity-50">{submitting ? "جاري الإضافة..." : "إضافة المشترك"}</button></div>
+      </form>
+    </div>
+  );
+}
+
 function RegisteredUsersPanel() {
   const [users, setUsers] = useState<StudentUser[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [addingSubscriber, setAddingSubscriber] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -215,9 +303,12 @@ function RegisteredUsersPanel() {
 
   return (
     <div>
-      <div className="relative mb-5 max-w-md">
-        <Search size={17} className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
-        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث بالاسم أو الإيميل" className="h-11 w-full rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-4 pe-11 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]" />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="relative w-full max-w-md flex-1">
+          <Search size={17} className="pointer-events-none absolute end-4 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث بالاسم أو الإيميل" className="h-11 w-full rounded-full border border-[var(--color-border)] bg-[var(--color-card)] px-4 pe-11 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]" />
+        </div>
+        <button type="button" onClick={() => setAddingSubscriber(true)} className="inline-flex h-11 items-center gap-2 rounded-full bg-[var(--color-primary)] px-5 font-bold text-white"><Plus size={18} />إضافة مشترك</button>
       </div>
       {error && <p className="mb-4 text-sm text-red-500">{error}</p>}
       {loading ? (
@@ -243,6 +334,7 @@ function RegisteredUsersPanel() {
           </table>
         </div>
       )}
+      {addingSubscriber && <AddSubscriberModal onClose={() => setAddingSubscriber(false)} onCreated={loadUsers} />}
     </div>
   );
 }

@@ -40,7 +40,9 @@ type AuthContextValue = {
   user: AuthUser | null;
   loading: boolean;
   login: (phone: string, password: string) => Promise<LoginResult>;
-  register: (input: RegisterInput) => Promise<void>;
+  register: (input: RegisterInput) => Promise<{ email: string; message: string }>;
+  verifyRegistration: (email: string, otp: string, courseId?: string) => Promise<void>;
+  resendRegistrationOtp: (email: string) => Promise<string>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshAccess: () => Promise<void>;
@@ -183,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function register(input: RegisterInput) {
-    const response = await apiRequest<{ user: ApiUser; token: string }>("/auth/register", {
+    const response = await apiRequest<{ email: string; message: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
         name: input.name,
@@ -194,16 +196,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         device_name: "academy-web",
       }),
     });
+    return response;
+  }
+
+  async function verifyRegistration(email: string, otp: string, courseId?: string) {
+    const response = await apiRequest<{ user: ApiUser; token: string }>("/auth/verify-registration", {
+      method: "POST",
+      body: JSON.stringify({ email, otp, device_name: "academy-web" }),
+    });
     setSessionExpired(false);
     setStudentToken(response.token);
     setUser(mapUser(response.user));
-    if (input.courseId) {
+    if (courseId) {
       await apiRequest("/subscriptions", {
         method: "POST",
         token: response.token,
-        body: JSON.stringify({ course_id: Number(input.courseId) }),
+        body: JSON.stringify({ course_id: Number(courseId) }),
       });
     }
+  }
+
+  async function resendRegistrationOtp(email: string) {
+    const response = await apiRequest<{ message: string }>("/auth/resend-registration-otp", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+    return response.message;
   }
 
   async function refreshAccess() {
@@ -246,6 +264,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       register,
+      verifyRegistration,
+      resendRegistrationOtp,
       logout,
       refreshProfile,
       refreshAccess,

@@ -259,7 +259,7 @@ export function CourseEditor({ course }: { course: Course }) {
                         >
                           <span className="flex min-w-0 items-center gap-3">
                             {lesson.thumbnailImageUrl && <img src={lesson.thumbnailImageUrl} alt="" className="h-10 w-16 shrink-0 rounded-md border border-[var(--color-border)] object-cover" />}
-                            <span className="truncate">{lesson.title}</span>
+                            <span className="min-w-0"><span className="block truncate">{lesson.title}</span>{lesson.isPreview && <span className="mt-1 inline-flex rounded-full bg-green-500/15 px-2 py-0.5 text-[10px] font-bold text-green-600">درس مجاني</span>}</span>
                           </span>
                           <div className="flex items-center gap-1 shrink-0">
                             <button

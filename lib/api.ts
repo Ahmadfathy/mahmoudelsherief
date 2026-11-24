@@ -46,6 +46,7 @@ const FIELD_LABELS: Record<string, string> = {
   password: "كلمة السر",
   password_confirmation: "تأكيد كلمة السر",
   current_password: "كلمة السر الحالية",
+  otp: "كود التحقق",
   course_id: "الكورس",
   receipt: "صورة الإيصال",
 };

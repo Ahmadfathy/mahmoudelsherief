@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, ArrowRight, Camera, LogIn, UserPlus } from "lucide-react";
 import { PhoneInput, isValidPhoneInput, phoneForSubmit, DEFAULT_COUNTRY } from "@/components/academy/PhoneInput";
 import { PasswordInput } from "@/components/academy/PasswordInput";
+import { RegistrationOtpForm } from "@/components/academy/RegistrationOtpForm";
 import { config } from "@/lib/config";
 import { useAuth, type LoginResult } from "@/lib/auth-context";
 import { ApiError, friendlyApiError } from "@/lib/api";
@@ -33,6 +34,8 @@ export default function SubscriptionEntry() {
   const [error, setError] = useState("");
   const [errorField, setErrorField] = useState<RegisterField | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
 
   async function handleRegister(event: React.FormEvent) {
     event.preventDefault();
@@ -51,8 +54,9 @@ export default function SubscriptionEntry() {
 
     setSubmitting(true);
     try {
-      await register({ name: registerName.trim(), email: registerEmail.trim(), phone: phoneForSubmit(registerPhone, registerCountry), password: registerPassword });
-      navigate("/dashboard", { replace: true });
+      const response = await register({ name: registerName.trim(), email: registerEmail.trim(), phone: phoneForSubmit(registerPhone, registerCountry), password: registerPassword });
+      setPendingEmail(response.email);
+      setOtpMessage(response.message);
     } catch (requestError) {
       setError(friendlyApiError(requestError));
       if (requestError instanceof ApiError) {
@@ -107,7 +111,7 @@ export default function SubscriptionEntry() {
             <p className="text-sm text-[var(--color-muted)]">أنشئ حسابًا جديدًا أو سجّل الدخول لو عندك حساب بالفعل</p>
           </div>
 
-          <div className="mb-7 grid grid-cols-2 rounded-xl bg-[var(--color-subtle)] p-1" role="tablist" aria-label="نوع الاشتراك">
+          {!pendingEmail && <div className="mb-7 grid grid-cols-2 rounded-xl bg-[var(--color-subtle)] p-1" role="tablist" aria-label="نوع الاشتراك">
             <button
               type="button"
               role="tab"
@@ -128,7 +132,7 @@ export default function SubscriptionEntry() {
               <LogIn size={17} />
               تسجيل دخول
             </button>
-          </div>
+          </div>}
 
           {user ? (
             <div className="text-center">
@@ -137,6 +141,8 @@ export default function SubscriptionEntry() {
                 دخول لوحة حسابي
               </Link>
             </div>
+          ) : pendingEmail ? (
+            <RegistrationOtpForm email={pendingEmail} initialMessage={otpMessage} onVerified={() => navigate("/dashboard", { replace: true })} onBack={() => { setPendingEmail(""); setOtpMessage(""); }} />
           ) : tab === "register" ? (
             <form onSubmit={handleRegister} noValidate className="space-y-4">
               <div><label className="mb-1.5 block text-sm font-bold">الاسم</label><input type="text" value={registerName} onChange={(event) => { setRegisterName(event.target.value); if (errorField === "name") { setError(""); setErrorField(null); } }} autoComplete="name" aria-invalid={errorField === "name"} className={`h-12 w-full rounded-xl border bg-[var(--color-bg)] px-4 transition-colors focus-visible:outline-none focus-visible:ring-2 ${errorField === "name" ? "border-red-400 focus-visible:ring-red-200" : "border-[var(--color-border)] focus-visible:ring-[var(--color-primary)]"}`} /></div>
